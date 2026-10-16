@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.1.0 — 2026-10-17
+
 - 2026-10-17 — ci: Added checkers, CLI tests, Linux and Windows small and medium with the package consumer, ASan with UBSan and ThreadSanitizer (`ci.yml`, `setup-sl`).
 - 2026-10-17 — package: Installed SushiLog::SushiLog and SushiLog::SushiLogStatic, and added a consumer that logs through both (`SushiLogInstall.cmake`, `tests/package`).
 - 2026-10-17 — log: Added the logger in one brick per responsibility, with a bounded queue, the FATAL order, the C interface and the ABI check (`log_writer.cpp`, `level_table.cpp`, `log_abi.hpp`).

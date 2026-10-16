@@ -8,6 +8,9 @@ pip install -e ./cli
 
 Every build and test goes through `sl`; do not call CMake, Ninja or CTest yourself.
 
+In PowerShell `sl` is the built-in alias of `Set-Location`; type `sushilog`, the same command
+under its full name, there.
+
 ## sl build
 
 Configures the tree when it needs it, then builds the shared and the static library, the
