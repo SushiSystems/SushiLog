@@ -118,6 +118,11 @@ hands it `sl_forward_record`, and the plug-in calls `sl_set_log_synchronous(1)` 
 `sl_set_log_sink` with it, so every record of the plug-in enters the host's queue. A
 `LogSink` never crosses a library boundary; the C interface does.
 
+SushiLog exports functions only, never data, so a project whose one set of objects reaches both
+a plug-in and its other programs compiles them once with `SUSHILOG_STATIC`: the plug-in resolves
+each call in the static target, and every other program through the shared library's import
+thunks.
+
 Everything else links `SushiLog::SushiLog`, the shared library, which a process loads once. On
 Windows its `sushilog.dll` has to sit beside each program that loads it; the build copies it
 there for the tests and the package consumer, and the install puts it under `bin/`.
