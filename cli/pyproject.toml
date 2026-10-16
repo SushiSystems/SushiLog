@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sushilog-cli"
+version = "0.1.0"
+description = "SushiLog developer CLI (build / test / check)"
+authors = [{ name = "Mustafa Garip", email = "mustafagarip@sushisystems.io" }]
+license = { text = "PolyForm-Noncommercial-1.0.0" }
+requires-python = ">=3.11"
+dependencies = [
+    "sushicore==0.9.0",
+    "typer>=0.12",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0", "pytest-timeout>=2.3"]
+
+[project.scripts]
+sl = "sushilog.cli:main"
+sushilog = "sushilog.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sushilog*"]
+
+[tool.setuptools.package-data]
+sushilog = ["py.typed"]
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers"
+markers = [
+    "small: one process and one thread, no network, no sleep, no file outside the build tree (60 s)",
+    "medium: threads and processes, localhost, files in a temporary folder (300 s)",
+    "large: real hardware, or a run longer than medium allows (900 s)",
+]

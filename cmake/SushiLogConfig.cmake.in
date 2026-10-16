@@ -1,0 +1,18 @@
+# SushiLogConfig.cmake.in
+# SushiLog - https://github.com/SushiSystems/SushiLog
+# Copyright (c) 2026-present Mustafa Garip & Sushi Systems
+# Licensed under PolyForm Noncommercial 1.0.0. See LICENSE.
+# Commercial use requires a licence from Sushi Systems.
+
+@PACKAGE_INIT@
+
+# What find_package(SushiLog) gives a consumer: SushiLog::SushiLog, the shared library, and
+# SushiLog::SushiLogStatic, the static one with hidden symbols. Neither carries this tree's
+# warnings or sanitizer.
+
+include(CMakeFindDependencyMacro)
+find_dependency(Threads)
+
+include("${CMAKE_CURRENT_LIST_DIR}/SushiLogTargets.cmake")
+
+check_required_components(SushiLog)
