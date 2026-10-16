@@ -43,29 +43,22 @@ namespace SushiLog::Detail
         return find_or_add(category).level;
     }
 
-    bool LevelTable::set_project(LogProject project, LogLevel level)
+    void LevelTable::set_project(LogProject project, LogLevel level)
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        const std::optional<std::size_t> index = find_project(project);
-        if (!index)
-            return false;
-
-        projects_[*index].setting = LevelSetting{level, {}};
+        const std::size_t index = find_or_add_project(project);
+        projects_[index].setting = LevelSetting{level, {}};
         for (Slot& entry : slots_)
         {
-            if (entry.project == *index && !entry.pinned)
+            if (entry.project == index && !entry.pinned)
                 entry.level.store(static_cast<int>(level), std::memory_order_relaxed);
         }
-        return true;
     }
 
-    std::optional<LogLevel> LevelTable::project_level(LogProject project)
+    LogLevel LevelTable::project_level(LogProject project)
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        const std::optional<std::size_t> index = find_project(project);
-        if (!index)
-            return std::nullopt;
-        return projects_[*index].setting.level;
+        return projects_[find_or_add_project(project)].setting.level;
     }
 
     void LevelTable::set_category(LogCategory category, LogLevel level)
@@ -86,16 +79,17 @@ namespace SushiLog::Detail
         return std::nullopt;
     }
 
+    std::size_t LevelTable::find_or_add_project(LogProject project)
+    {
+        if (const std::optional<std::size_t> found = find_project(project))
+            return *found;
+        projects_.push_back(Project{std::string(project.name()), reader_(project)});
+        return projects_.size() - 1;
+    }
+
     LevelTable::Slot& LevelTable::find_or_add(LogCategory category)
     {
-        std::optional<std::size_t> found = find_project(category.project());
-        if (!found)
-        {
-            projects_.push_back(Project{std::string(category.project().name()),
-                                        reader_(category.project())});
-            found = projects_.size() - 1;
-        }
-        const std::size_t index = *found;
+        const std::size_t index = find_or_add_project(category.project());
 
         for (Slot& entry : slots_)
         {

@@ -29,7 +29,6 @@
 #include <SushiLog/log/log_calls.hpp>
 
 #include <exception>
-#include <optional>
 #include <string>
 #include <utility>
 
@@ -38,27 +37,12 @@
 #include "forward_sink.hpp"
 #include "level_name.hpp"
 #include "logger.hpp"
-#include "own_record.hpp"
 #include "stderr_line.hpp"
 
 namespace SushiLog
 {
     namespace
     {
-        /**
-         * @brief Writes the WARN that a level call for @p project, which this logger does not
-         *        own, changed nothing.
-         */
-        void warn_unowned_project(LogProject project, std::string_view call)
-        {
-            const std::string name(project.name());
-            Detail::logger().writer.write(Detail::make_own_record(
-                LogLevel::Warn, __FILE__, __LINE__,
-                std::string(call) + " for project '" + name + "' changed nothing: this "
-                    "logger has seen no category of '" + name + "'; set it through the logger "
-                    "its categories log through"));
-        }
-
         /** @brief Writes on stderr that @p call failed with @p error and changed nothing. */
         void report_failed_call(std::string_view call, const std::exception& error) noexcept
         {
@@ -71,9 +55,7 @@ namespace SushiLog
     {
         try
         {
-            if (!Detail::logger().levels.set_project(project, level))
-                warn_unowned_project(project, std::string("set_log_level(") +
-                                                  std::string(Detail::level_label(level)) + ")");
+            Detail::logger().levels.set_project(project, level);
         }
         catch (const std::exception& error)
         {
@@ -85,10 +67,7 @@ namespace SushiLog
     {
         try
         {
-            const std::optional<LogLevel> level = Detail::logger().levels.project_level(project);
-            if (level)
-                return *level;
-            warn_unowned_project(project, "log_level()");
+            return Detail::logger().levels.project_level(project);
         }
         catch (const std::exception& error)
         {

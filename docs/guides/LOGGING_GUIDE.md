@@ -68,10 +68,10 @@ value SushiLog cannot read is reported once on stderr, and that project stays at
 
 In code, `set_log_level(project, level)` sets every category of a project and
 `set_log_level(category, level)` sets one, which the project call then leaves alone. A call for
-a category made before the first log call wins over the variable. A call for a project none of
-whose categories SushiLog has seen changes nothing and writes one `WARN` naming the project:
-you set it through a logger that is not the one the project logs through, such as the private
-copy of a plug-in.
+a category made before the first log call wins over the variable. A project call made before any of
+the project's categories is used still holds: a host sets SushiRuntime's level before it
+creates its runtime, without knowing a category name, and every category of the project starts at
+that level.
 
 ## Sending records elsewhere
 

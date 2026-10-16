@@ -47,9 +47,9 @@ A record passes two gates. The ceiling of its translation unit compiles a call p
 nothing; the atomic level of its category, `WARN` unless something sets it, costs one relaxed
 load. A project's variable sets its levels the first time one of its categories is used.
 
-A logger owns the projects whose categories it has seen. A level call for a project it does not
-own changes nothing and writes one `WARN` naming the project. A level call for a category makes
-the logger see that category, so a call made before the first log call wins over the variable.
+A level call for a project or a category adds it when it is new, reading the project's variable
+first, so a call made before the first log call wins over the variable, and every category of a
+project set that way starts at its level.
 
 The queue holds 4096 records. A record that finds it full is dropped, and the next record
 delivered is preceded by a `WARN` naming how many were dropped. `FATAL` waits for the queue,

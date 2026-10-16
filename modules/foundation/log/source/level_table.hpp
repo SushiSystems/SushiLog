@@ -68,16 +68,13 @@ namespace SushiLog::Detail
             [[nodiscard]] std::atomic<int>& slot(LogCategory category);
 
             /**
-             * @brief Sets @p project and every category of it set_category() has not pinned.
-             * @return False, changing nothing, when no category of @p project was added.
+             * @brief Sets @p project, adding it first, and every category of it set_category()
+             * has not pinned, including the ones added later.
              */
-            [[nodiscard]] bool set_project(LogProject project, LogLevel level);
+            void set_project(LogProject project, LogLevel level);
 
-            /**
-             * @brief Returns the level of @p project's categories that nothing pins.
-             * @return Nothing when no category of @p project was added.
-             */
-            [[nodiscard]] std::optional<LogLevel> project_level(LogProject project);
+            /** @brief Returns the level of @p project's categories that nothing pins, adding it first. */
+            [[nodiscard]] LogLevel project_level(LogProject project);
 
             /** @brief Sets one category, adding it first, and pins it against set_project(). */
             void set_category(LogCategory category, LogLevel level);
@@ -104,6 +101,12 @@ namespace SushiLog::Detail
              * @pre mutex_ is held.
              */
             [[nodiscard]] std::optional<std::size_t> find_project(LogProject project) const;
+
+            /**
+             * @brief Returns the index of @p project, adding it and reading its variable on first use.
+             * @pre mutex_ is held.
+             */
+            [[nodiscard]] std::size_t find_or_add_project(LogProject project);
 
             /**
              * @brief Returns the slot of @p category, adding it and its project on first use.

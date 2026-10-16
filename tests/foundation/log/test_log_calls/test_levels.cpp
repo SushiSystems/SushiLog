@@ -89,31 +89,25 @@ TEST(Small_LogLevels, SettingAProjectTouchesNoOtherProject)
     EXPECT_EQ(SushiLog::log_level(K_OTHER_LOG_CATEGORY), LogLevel::Warn);
 }
 
-TEST(Small_LogLevels, SettingAnUnseenProjectChangesNothingAndWarnsOnce)
+TEST(Small_LogLevels, AProjectSetBeforeItsFirstCategoryAppliesToIt)
 {
     const SushiLogTests::SynchronousRecording recording;
-    constexpr SushiLog::LogProject unseen{"unseentest", "UNSEENTEST_LOG_LEVEL"};
+    constexpr SushiLog::LogProject early{"earlytest", "EARLYTEST_LOG_LEVEL"};
 
-    SushiLog::set_log_level(unseen, LogLevel::Trace);
+    SushiLog::set_log_level(early, LogLevel::Trace);
 
-    ASSERT_EQ(recording.sink().lines().size(), 1u);
-    const SushiLogTests::RecordedLine line = recording.sink().lines()[0];
-    EXPECT_EQ(line.level, LogLevel::Warn);
-    EXPECT_EQ(line.project, "sushilog");
-    EXPECT_EQ(line.module, "log");
-    EXPECT_NE(line.message.find("'unseentest'"), std::string::npos);
-    EXPECT_EQ(SushiLog::log_level(SushiLog::make_log_category(unseen, "any")), LogLevel::Warn);
+    EXPECT_TRUE(recording.sink().lines().empty());
+    EXPECT_EQ(SushiLog::log_level(early), LogLevel::Trace);
+    EXPECT_EQ(SushiLog::log_level(SushiLog::make_log_category(early, "later")), LogLevel::Trace);
 }
 
-TEST(Small_LogLevels, ReadingAnUnseenProjectWarnsAndReturnsWarn)
+TEST(Small_LogLevels, ReadingAnUnseenProjectGivesItsDefaultAndWritesNothing)
 {
     const SushiLogTests::SynchronousRecording recording;
-    constexpr SushiLog::LogProject unseen{"unreadtest", "UNREADTEST_LOG_LEVEL"};
+    constexpr SushiLog::LogProject unread{"unreadtest", "UNREADTEST_LOG_LEVEL"};
 
-    EXPECT_EQ(SushiLog::log_level(unseen), LogLevel::Warn);
-
-    ASSERT_EQ(recording.sink().lines().size(), 1u);
-    EXPECT_NE(recording.sink().lines()[0].message.find("'unreadtest'"), std::string::npos);
+    EXPECT_EQ(SushiLog::log_level(unread), LogLevel::Warn);
+    EXPECT_TRUE(recording.sink().lines().empty());
 }
 
 TEST(Small_LogLevels, ALogCallPassesAtOrAboveItsCategoryLevel)
