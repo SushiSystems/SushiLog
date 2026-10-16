@@ -55,11 +55,11 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: ./.github/actions/setup-sl
       - name: sl build --type release
-        run: sl build --type release
+        run: sushilog build --type release
       - name: sl test --label small
-        run: sl test --label small
+        run: sushilog test --label small
       - name: sl test --label medium --package
-        run: sl test --label medium --package
+        run: sushilog test --label medium --package
 
   windows:
     name: Windows (small, medium, package)
@@ -72,11 +72,11 @@ jobs:
       - uses: ./.github/actions/setup-sl
       - uses: ilammy/msvc-dev-cmd@v1
       - name: sl build --type release
-        run: sl build --type release
+        run: sushilog build --type release
       - name: sl test --label small
-        run: sl test --label small
+        run: sushilog test --label small
       - name: sl test --label medium --package
-        run: sl test --label medium --package
+        run: sushilog test --label medium --package
 
   sanitizers:
     name: ASan and UBSan (small, medium)
@@ -89,9 +89,9 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: ./.github/actions/setup-sl
       - name: sl build --sanitize address
-        run: sl build --sanitize address
+        run: sushilog build --sanitize address
       - name: sl test --sanitize address --label small --label medium
-        run: sl test --sanitize address --label small --label medium
+        run: sushilog test --sanitize address --label small --label medium
 
   thread-sanitizer:
     name: ThreadSanitizer (small, medium)
@@ -103,9 +103,9 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: ./.github/actions/setup-sl
       - name: sl build --sanitize thread --type relwithdebinfo
-        run: sl build --sanitize thread --type relwithdebinfo
+        run: sushilog build --sanitize thread --type relwithdebinfo
       - name: sl test --sanitize thread --label small --label medium
-        run: sl test --sanitize thread --label small --label medium
+        run: sushilog test --sanitize thread --label small --label medium
 
   gate:
     name: gate
