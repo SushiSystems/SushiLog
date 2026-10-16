@@ -35,6 +35,12 @@ function(sushilog_install_package)
         NAMESPACE SushiLog::
         DESTINATION "${SL_INSTALL_CMAKEDIR}")
 
+    # The build tree is exported too, so a project that adds SushiLog as a subdirectory and
+    # exports its own build tree finds SushiLog's targets in an export set.
+    export(EXPORT SushiLogTargets
+        FILE "${PROJECT_BINARY_DIR}/SushiLogTargets.cmake"
+        NAMESPACE SushiLog::)
+
     configure_package_config_file(
         "${SL_CMAKE_DIR}/SushiLogConfig.cmake.in"
         "${PROJECT_BINARY_DIR}/SushiLogConfig.cmake"

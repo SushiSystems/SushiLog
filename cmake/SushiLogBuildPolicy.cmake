@@ -34,10 +34,19 @@ elseif(NOT SL_SANITIZE STREQUAL "")
     message(FATAL_ERROR "SL_SANITIZE='${SL_SANITIZE}': use address, thread or nothing.")
 endif()
 
-# Applies the warnings and the sanitizer to one target of this tree. BUILD_INTERFACE keeps
-# both names out of the exported link interface.
+# Applies the warnings and the sanitizer to one target of this tree. Their settings are copied
+# onto the target rather than linked, because a static library carries even a private link into
+# its link interface, and a build-tree export would then require both names in its export set.
 function(sushilog_apply_build_policy target)
-    target_link_libraries(${target} PRIVATE
-        "$<BUILD_INTERFACE:sushilog_warnings>"
-        "$<BUILD_INTERFACE:sushilog_sanitizers>")
+    get_target_property(type ${target} TYPE)
+    foreach(policy IN ITEMS sushilog_warnings sushilog_sanitizers)
+        target_compile_options(${target} PRIVATE
+            "$<TARGET_PROPERTY:${policy},INTERFACE_COMPILE_OPTIONS>")
+        target_compile_definitions(${target} PRIVATE
+            "$<TARGET_PROPERTY:${policy},INTERFACE_COMPILE_DEFINITIONS>")
+        if(NOT type STREQUAL "STATIC_LIBRARY")
+            target_link_options(${target} PRIVATE
+                "$<TARGET_PROPERTY:${policy},INTERFACE_LINK_OPTIONS>")
+        endif()
+    endforeach()
 endfunction()
