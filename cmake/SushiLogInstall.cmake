@@ -17,7 +17,7 @@ set(SL_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/SushiLog"
 function(sushilog_install_package)
     get_property(include_roots GLOBAL PROPERTY SUSHILOG_INCLUDE_ROOTS)
 
-    install(TARGETS sushilog sushilog_static
+    install(TARGETS sushilog sushilog_static sushilog_text
         EXPORT SushiLogTargets
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"

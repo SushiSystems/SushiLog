@@ -33,8 +33,9 @@
 #include <SushiLog/log/log_abi.hpp>
 #include <SushiLog/log/log_calls.hpp>
 #include <SushiLog/log/log_category.hpp>
-#include <SushiLog/log/log_format.hpp>
 #include <SushiLog/log/log_front.hpp>
+#include <SushiLog/text/text_format.hpp>
+#include <SushiLog/text/value_text.hpp>
 #include <SushiLog/log/log_level.hpp>
 #include <SushiLog/log/log_project.hpp>
 #include <SushiLog/log/log_record.hpp>

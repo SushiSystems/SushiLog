@@ -35,7 +35,7 @@
 #include <SushiLog/log/export.hpp>
 #include <SushiLog/log/log_abi.hpp>
 #include <SushiLog/log/log_category.hpp>
-#include <SushiLog/log/log_format.hpp>
+#include <SushiLog/text/text_format.hpp>
 #include <SushiLog/log/log_level.hpp>
 
 namespace SushiLog
@@ -93,7 +93,7 @@ namespace SushiLog
         void log_record(LogLevel level, LogCategory category, const char* file, int line,
                         std::string_view format, const Args&... args)
         {
-            emit_log_record(level, category, file, line, format_log_message(format, args...));
+            emit_log_record(level, category, file, line, format_text(format, args...));
         }
     } // namespace Detail
 } // namespace SushiLog

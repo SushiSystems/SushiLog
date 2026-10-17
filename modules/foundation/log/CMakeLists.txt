@@ -6,6 +6,7 @@
 
 sushilog_add_module(
     NAME log TIER foundation
+    DEPENDS text
     SOURCES
         forward_sink.cpp
         level_environment.cpp

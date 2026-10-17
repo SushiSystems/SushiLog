@@ -1,5 +1,5 @@
 /**************************************************************************/
-/* test_log_format.cpp                                                    */
+/* test_text_format.cpp                                                   */
 /**************************************************************************/
 /*                          This file is part of:                         */
 /*                                SushiLog                                */
@@ -20,38 +20,35 @@
 /**************************************************************************/
 
 /**
- * @file test_log_format.cpp
- * @brief Tests format_log_message: placeholders, doubled braces and surplus arguments.
+ * @file test_text_format.cpp
+ * @brief Tests format_text: placeholders, literal braces and argument counts.
  * @author Mustafa Garip
- * @see tests/foundation/log/README.md
+ * @see tests/core/text/README.md
  */
 
-#include <SushiLog/log/log_format.hpp>
-
-#include <string>
+#include <SushiLog/text/text_format.hpp>
 
 #include <gtest/gtest.h>
 
-using SushiLog::Detail::format_log_message;
+using SushiLog::format_text;
 
-TEST(Small_LogFormat, ReplacesEachPlaceholderInOrder)
+TEST(Small_TextFormat, EachPlaceholderTakesTheNextArgument)
 {
-    EXPECT_EQ(format_log_message("{} of {} at {}", 3, std::string("eight"), 1.5),
-              "3 of eight at 1.5");
+    EXPECT_EQ(format_text("{} of {}", 3, "four"), "3 of four");
 }
 
-TEST(Small_LogFormat, WritesDoubledBracesOnce)
+TEST(Small_TextFormat, DoubledBracesAreWrittenOnce)
 {
-    EXPECT_EQ(format_log_message("{{}} {}", 1), "{} 1");
-    EXPECT_EQ(format_log_message("{{literal}}"), "{literal}");
+    EXPECT_EQ(format_text("{{}} and {}", 1), "{} and 1");
+    EXPECT_EQ(format_text("{{only}}"), "{only}");
 }
 
-TEST(Small_LogFormat, LeavesAPlaceholderWithoutArgumentAsWritten)
+TEST(Small_TextFormat, APlaceholderPastTheLastArgumentStays)
 {
-    EXPECT_EQ(format_log_message("{} and {}", 1), "1 and {}");
+    EXPECT_EQ(format_text("{} {}", 1), "1 {}");
 }
 
-TEST(Small_LogFormat, IgnoresAnArgumentWithoutPlaceholder)
+TEST(Small_TextFormat, AnArgumentPastTheLastPlaceholderIsDropped)
 {
-    EXPECT_EQ(format_log_message("none", 1, 2), "none");
+    EXPECT_EQ(format_text("{}", 1, 2), "1");
 }

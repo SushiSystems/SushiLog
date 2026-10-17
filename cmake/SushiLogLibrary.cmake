@@ -53,6 +53,15 @@ function(sushilog_compose_library)
         SOVERSION ${soversion}
         OUTPUT_NAME sushilog)
 
+    # SushiLog::text formats text without the logger, so a project builds messages alone.
+    add_library(sushilog_text INTERFACE)
+    add_library(SushiLog::text ALIAS sushilog_text)
+    target_include_directories(sushilog_text INTERFACE
+        "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/modules/core/text/include>"
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+    target_compile_features(sushilog_text INTERFACE cxx_std_17)
+    set_target_properties(sushilog_text PROPERTIES EXPORT_NAME text)
+
     sushilog_add_library_target(sushilog_static STATIC SushiLogStatic)
     target_compile_definitions(sushilog_static PUBLIC SUSHILOG_STATIC)
     set_target_properties(sushilog_static PROPERTIES OUTPUT_NAME sushilog_static)

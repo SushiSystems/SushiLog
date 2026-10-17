@@ -7,4 +7,4 @@
 sushilog_add_module(
     NAME umbrella TIER foundation
     HEADER_ONLY
-    DEPENDS log)
+    DEPENDS text log)

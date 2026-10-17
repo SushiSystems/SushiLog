@@ -8,10 +8,12 @@
 
 # Lowest tier first.
 set(SUSHILOG_TIER_ORDER
+    core
     foundation)
 
 # Module, then its tier. A dependency is listed before its consumer.
 set(SUSHILOG_MODULE_TIERS
+    text        core
     log         foundation
     umbrella    foundation)
 

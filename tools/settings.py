@@ -10,7 +10,7 @@ copy_shared_tools.py writes this file only when a repository has none, and never
 
 from __future__ import annotations
 
-K_TIER_ORDER: tuple[str, ...] = ("foundation",)
+K_TIER_ORDER: tuple[str, ...] = ("core", "foundation")
 K_DOMAIN_TIERS: tuple[str, ...] = ()
 K_SAME_TIER_EDGES: frozenset[tuple[str, str]] = frozenset()
 K_MODULE_FUNCTION = "sushilog_add_module"

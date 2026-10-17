@@ -50,6 +50,26 @@ A call past the ceiling compiles to nothing: `ERROR` when the project's enable s
 `DEBUG` under `NDEBUG`, `TRACE` otherwise. A call below its category's level costs one relaxed
 load and evaluates none of its arguments.
 
+## Formatting text
+
+Each `{}` of a record's format takes the next argument through `operator<<`; there are no format
+specs. A value that needs a precision, a width or hex goes through a helper of `SushiLog::text`
+first, and the same helpers build any other text, such as an error message, without the logger:
+
+```cpp
+TEST(Small_ValueText, HelpersComposeAndFeedAFormat)
+{
+    EXPECT_EQ(SushiLog::right(SushiLog::fixed(3.14159, 2), 8), "    3.14");
+    EXPECT_EQ(SushiLog::format_text("loss {}", SushiLog::fixed(0.5, 2)), "loss 0.50");
+}
+```
+
+Source: `tests/core/text/test_value_text.cpp`
+
+The helpers are `fixed`, `general`, `scientific`, `hex`, `right` and `left`; the module's
+README lists the spec each one replaces. A project links `SushiLog::text` for them and keeps no
+formatter of its own.
+
 ## Choosing what you see
 
 Every category logs at `WARN` until something sets it. Each project reads its own variable the
