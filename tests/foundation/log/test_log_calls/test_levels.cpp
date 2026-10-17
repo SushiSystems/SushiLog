@@ -123,3 +123,17 @@ TEST(Small_LogLevels, ALogCallPassesAtOrAboveItsCategoryLevel)
     EXPECT_EQ(recording.sink().count_of("at"), 1u);
     EXPECT_EQ(recording.sink().count_of("above"), 1u);
 }
+
+TEST(Small_LogLevels, LogAtWritesTheGivenCallSitePastEveryLevel)
+{
+    const SushiLogTests::SynchronousRecording recording;
+    SushiLog::set_log_level(K_GRAPH_LOG_CATEGORY, LogLevel::Off);
+
+    SushiLog::log_at(LogLevel::Error, K_GRAPH_LOG_CATEGORY, "failing.cpp", 42, "check failed");
+
+    ASSERT_EQ(recording.sink().lines().size(), 1u);
+    const SushiLogTests::RecordedLine line = recording.sink().lines()[0];
+    EXPECT_EQ(line.file, "failing.cpp");
+    EXPECT_EQ(line.line, 42u);
+    EXPECT_EQ(line.message, "check failed");
+}

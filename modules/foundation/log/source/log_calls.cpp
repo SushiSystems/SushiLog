@@ -104,6 +104,19 @@ namespace SushiLog
         Detail::logger().writer.set_synchronous(synchronous);
     }
 
+    void log_at(LogLevel level, LogCategory category, const char* file, int line,
+                std::string_view message) noexcept
+    {
+        try
+        {
+            Detail::emit_log_record(level, category, file, line, std::string(message));
+        }
+        catch (const std::exception& error)
+        {
+            report_failed_call("log_at", error);
+        }
+    }
+
     LogSink log_forward_sink()
     {
         return LogSink([](const LogRecord& record)

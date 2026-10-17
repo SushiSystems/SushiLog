@@ -28,6 +28,8 @@
 
 #include <SushiLog/text/text_format.hpp>
 
+#include <cstdint>
+
 #include <gtest/gtest.h>
 
 using SushiLog::format_text;
@@ -43,12 +45,29 @@ TEST(Small_TextFormat, DoubledBracesAreWrittenOnce)
     EXPECT_EQ(format_text("{{only}}"), "{only}");
 }
 
-TEST(Small_TextFormat, APlaceholderPastTheLastArgumentStays)
+TEST(Small_TextFormat, APlaceholderWithNoArgumentShowsAsAQuestion)
 {
-    EXPECT_EQ(format_text("{} {}", 1), "1 {}");
+    EXPECT_EQ(format_text("{} {}", 1), "1 {?}");
 }
 
-TEST(Small_TextFormat, AnArgumentPastTheLastPlaceholderIsDropped)
+TEST(Small_TextFormat, ArgumentsPastTheLastPlaceholderAreCounted)
 {
-    EXPECT_EQ(format_text("{}", 1, 2), "1");
+    EXPECT_EQ(format_text("{}", 1, 2, 3), "1 {+2}");
+}
+
+namespace
+{
+    enum class Phase : signed char { Load = 3 };
+}
+
+TEST(Small_TextFormat, AnEightBitIntegerIsANumberAndAnEnumItsValue)
+{
+    EXPECT_EQ(format_text("{} {}", static_cast<std::int8_t>(-5), static_cast<std::uint8_t>(200)), "-5 200");
+    EXPECT_EQ(format_text("{}", Phase::Load), "3");
+}
+
+TEST(Small_TextFormat, ANullCStringIsWrittenAsNull)
+{
+    const char* missing = nullptr;
+    EXPECT_EQ(format_text("[{}]", missing), "[(null)]");
 }

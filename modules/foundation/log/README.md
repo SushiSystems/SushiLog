@@ -14,7 +14,7 @@ C++ standard library only.
 | `SushiLog/log/log_record.hpp` | `LogRecord`, the fields a sink receives |
 | `SushiLog/log/log_sink.hpp` | `LogSink`, the callable a sink is stored as |
 | `SushiLog/log/delegate.hpp` | `Delegate`, the move-only callable `LogSink` is built on |
-| `SushiLog/log/log_calls.hpp` | `set_log_level`, `log_level`, `set_log_sink`, `set_log_synchronous`, `log_forward_sink` |
+| `SushiLog/log/log_calls.hpp` | `set_log_level`, `log_level`, `set_log_sink`, `set_log_synchronous`, `log_forward_sink`, `log_at` |
 | `SushiLog/log/log_front.hpp` | `SL_LOG_FRONT_AT` and `log_level_ceiling`, on which a project defines its macros |
 | `SushiLog/log/log_abi.hpp` | `K_ABI_VERSION`, `abi_version` and the check a front runs on its first call |
 | `SushiLog/log/log_c_sink.h` | The C interface: `SushiLogRecord`, `sl_set_log_sink`, `sl_set_log_synchronous`, `sl_forward_record` |

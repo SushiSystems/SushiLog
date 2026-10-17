@@ -10,7 +10,7 @@ exported on its own as `SushiLog::text`, so a project formats text without linki
 
 | Name | What it does |
 | --- | --- |
-| `format_text(format, args...)` | Writes each `{}` with the next argument through `operator<<`; `{{` and `}}` are literal braces; no format specs |
+| `format_text(format, args...)` | Writes each `{}` with the next argument through `operator<<`; `{{` and `}}` are literal braces; no format specs. An 8-bit integer is written as a number, a scoped enum with no `operator<<` as its value, a null C string as `(null)`; a `{}` with no argument left becomes `{?}`, and extra arguments are counted at the end as `{+N}` |
 
 `value_text.hpp`:
 

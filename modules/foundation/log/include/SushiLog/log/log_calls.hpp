@@ -34,6 +34,8 @@
 #include <SushiLog/log/log_project.hpp>
 #include <SushiLog/log/log_sink.hpp>
 
+#include <string_view>
+
 namespace SushiLog
 {
     /**
@@ -80,4 +82,14 @@ namespace SushiLog
      * this logger's number for the calling thread and gets its line written here.
      */
     [[nodiscard]] SUSHILOG_API LogSink log_forward_sink();
+
+    /**
+     * @brief Writes one record of @p message at the call site @p file and @p line, past both
+     *        level gates.
+     *
+     * For a handler that reports a failure at another call site, such as an assertion, whose
+     * record must carry the failing line and must not be dropped by a level.
+     */
+    SUSHILOG_API void log_at(LogLevel level, LogCategory category, const char* file, int line,
+                             std::string_view message) noexcept;
 } // namespace SushiLog
