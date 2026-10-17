@@ -24,7 +24,7 @@ function(sushilog_add_library_target target kind export_name)
     target_include_directories(${target} PUBLIC "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
     target_include_directories(${target} PRIVATE ${source_roots})
     target_compile_definitions(${target} PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
-    target_compile_features(${target} PUBLIC cxx_std_17)
+    set_target_properties(${target} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
     find_package(Threads REQUIRED)
     target_link_libraries(${target} PUBLIC Threads::Threads)
     if(NOT WIN32)
@@ -59,7 +59,6 @@ function(sushilog_compose_library)
     target_include_directories(sushilog_text INTERFACE
         "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/modules/core/text/include>"
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
-    target_compile_features(sushilog_text INTERFACE cxx_std_17)
     set_target_properties(sushilog_text PROPERTIES EXPORT_NAME text)
 
     sushilog_add_library_target(sushilog_static STATIC SushiLogStatic)
