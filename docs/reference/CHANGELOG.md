@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- 2026-10-17 — tests: Made the package consumer ask for the version this tree builds, so it follows each release (`tests/package/CMakeLists.txt`).
+
 ## v0.2.0 — 2026-10-17
 
 - 2026-10-17 — text: Added the text module, exported as SushiLog::text, with the format function that log records use (`text_format.hpp`).

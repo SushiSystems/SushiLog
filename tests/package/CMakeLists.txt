@@ -15,7 +15,11 @@ project(SushiLogPackageConsumer LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(SushiLog 0.1 REQUIRED)
+# The version is the one this tree builds, so the test follows each release without an edit.
+file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/../../CMakeLists.txt" project_line
+    REGEX "^project[(]SushiLog VERSION [0-9.]+")
+string(REGEX MATCH "[0-9]+[.][0-9]+[.][0-9]+" expected_version "${project_line}")
+find_package(SushiLog ${expected_version} EXACT REQUIRED)
 
 # A consumer inherits no warning, sanitizer or policy target of SushiLog's own tree.
 foreach(target IN ITEMS SushiLog::SushiLog SushiLog::SushiLogStatic)
