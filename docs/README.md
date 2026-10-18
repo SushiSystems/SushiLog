@@ -6,7 +6,7 @@ SushiLog is the one logger of the Sushi libraries. Start with the guide; the res
 
 - [`guides/LOGGING_GUIDE.md`](guides/LOGGING_GUIDE.md): where records go, setting levels per
   project and module, sinks, the C interface, plug-ins and the ABI message.
-- [`guides/CLI_GUIDE.md`](guides/CLI_GUIDE.md): `sl build`, `sl test` and `sl check`.
+- [`guides/CLI_GUIDE.md`](guides/CLI_GUIDE.md): `sl build`, `sl test`, `sl check` and `sl docs bundle`.
 - [`guides/FAQ.md`](guides/FAQ.md): short answers, each with its link.
 
 ## Reference

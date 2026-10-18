@@ -1,12 +1,14 @@
 name: CI
 
 # The pre-merge stage on every pull request; ThreadSanitizer joins it on every push to main.
-# Every build and test job runs the project CLI; tests/README.md gives the sizes.
+# Every build and test job runs the project CLI; tests/README.md gives the sizes. release.yml
+# calls it before it builds the documentation bundle.
 on:
   pull_request:
   push:
     branches: [ main ]
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read

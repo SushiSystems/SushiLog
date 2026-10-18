@@ -6,7 +6,8 @@
 """Declares the commands of `sl`, the SushiLog developer CLI.
 
 A thin Typer layer: each command parses its arguments and delegates to
-``sushilog.services.project``. The root options and the entry point come from sushicore.
+``sushilog.services.project``. The root options, the `docs` group and the entry point come from
+sushicore.
 """
 
 from __future__ import annotations
@@ -14,11 +15,13 @@ from __future__ import annotations
 from typing import Any, Optional
 
 import typer
+from sushicore.docs_bundle import register_docs_commands
 from sushicore.entry import run as run_app
 from sushicore.root_options import register_root_options
 from sushicore.typer_help import help_group
 
 from . import console
+from .config import find_project_root
 from .services import project as project_service
 from .services.project import BuildType, Sanitizer, Size
 
@@ -121,6 +124,15 @@ def check(
     """Run the shared checkers under tools/."""
     raise typer.Exit(project_service.check(report=report, rule=rule))
 
+
+register_docs_commands(
+    app,
+    program=K_PROGRAM,
+    panel=K_PANEL,
+    project_root=find_project_root,
+    report=lambda line: console.success(line),
+    group_cls=_help_group,
+)
 
 register_root_options(app, distribution=K_DISTRIBUTION)
 

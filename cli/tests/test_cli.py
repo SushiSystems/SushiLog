@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 from typer.testing import CliRunner
 
@@ -16,6 +18,7 @@ from sushilog.services.project import BuildType, Sanitizer, Size
 pytestmark = pytest.mark.small
 
 _RUNNER = CliRunner()
+_ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
 
 
 @pytest.fixture
@@ -70,6 +73,20 @@ def test_check_passes_report_and_rule(calls):
 
     assert result.exit_code == 0
     assert calls == [("check", (), {"report": True, "rule": "rule_a"})]
+
+
+def test_help_lists_the_docs_group():
+    result = _RUNNER.invoke(cli.app, ["--help"])
+
+    assert result.exit_code == 0
+    assert "docs" in result.output
+
+
+def test_docs_bundle_asks_for_a_release():
+    result = _RUNNER.invoke(cli.app, ["docs", "bundle"])
+
+    assert result.exit_code == 2
+    assert "--release" in _ANSI_ESCAPE.sub("", result.output)
 
 
 def test_a_failing_service_becomes_the_exit_code(monkeypatch):

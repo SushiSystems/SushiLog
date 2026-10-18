@@ -1,8 +1,9 @@
 # cli
 
 The `sl` command line interface. `sushilog/cli.py` parses the three commands, `build`, `test` and
-`check`, and `sushilog/services/project.py` does the work; the config loader, the console, the
-process runner and the CMake driver come from sushicore 0.9.0. `tests/` is the pytest suite:
+`check`, and `sushilog/services/project.py` does the work. The `docs` group, with its one command
+`bundle`, the config loader, the console, the process runner and the CMake driver come from
+sushicore 0.9.2. `tests/` is the pytest suite:
 `cd cli && python -m pytest tests -q`.
 
 ## config.py

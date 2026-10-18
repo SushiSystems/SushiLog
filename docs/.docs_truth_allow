@@ -1,1 +1,2 @@
 cli/config\.local\.toml # machine-specific CLI config that git ignores, so no checkout holds it
+docs/reference/DOCS_BUNDLE\.md # owned by SushiCore, not this repository

@@ -51,6 +51,25 @@ sl check --report                     # counts per rule, exit 0
 sl check --rule rule_console_output   # one rule
 ```
 
+## sl docs bundle
+
+Writes the archive `docs.sushisystems.io` reads: `docs-bundle-X.Y.Z.tar.gz` and its `.sha256`
+file, in `build/docs/bundle`. `docs/publish.toml` lists what goes in: the manual pages of the
+sections it names. It sets `api = false`, so the bundle carries no Doxygen XML.
+
+```bash
+sl docs bundle --release 0.2.2
+sl docs bundle --release 0.2.2 --out some/folder
+```
+
+`--release` is required; without it the command exits 2. A page with no level-one heading, a page
+`docs/README.md` does not link, or a link to a file that does not exist stops the command with one
+line naming the page and exit code 1. The archive's layout is in SushiCore's
+`docs/reference/DOCS_BUNDLE.md`.
+
+The release workflow runs this command on a pushed version tag and attaches the archive to the
+tag's GitHub release.
+
 ## Choosing the compiler
 
 `sl` builds with `cxx` from `cli/config.local.toml` or `SL_CXX`, else a clang++ on PATH, else
