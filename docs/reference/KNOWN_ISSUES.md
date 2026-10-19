@@ -1,10 +1,32 @@
 # Known issues
 
-Defects that are recorded and not yet fixed. The work each one needs is in
-[`REMAINING_WORK.md`](../design/REMAINING_WORK.md).
+Next id: KI-4
 
-| Issue | Where |
-| --- | --- |
-| A process ended without static destruction, such as by `_exit` or a crash, loses the records still queued | `modules/foundation/log/source/logger.cpp` |
-| On Windows the system ends the logger's thread before SushiLog's statics are destroyed; when it ends inside a sink call, the records still queued are lost and later records go to stderr | `modules/foundation/log/source/sink_holder.cpp`, `tests/foundation/log/test_log_calls/test_exit.cpp` |
-| In PowerShell `sl` is the built-in alias of `Set-Location`, so `sl build` changes folder instead of building; `sushilog` is the same command under its full name | `cli/pyproject.toml` |
+## Shutdown
+
+### KI-1 A process that skips static destruction loses the records still queued
+- Origin: own
+- Where: `modules/foundation/log/source/logger.cpp`
+- Cause: the writer drains its queue when the library's statics are destroyed
+- Recognise: records logged just before a crash or an `_exit` never reach the sink
+- Workaround: none
+- Fix: none, a process that skips static destruction runs no code that could drain the queue
+
+### KI-2 On Windows the logger's thread can end inside a sink call at exit
+- Origin: own
+- Where: `modules/foundation/log/source/sink_holder.cpp`,
+  `tests/foundation/log/test_log_calls/test_exit.cpp`
+- Cause: Windows ends every thread but the main one before SushiLog's statics are destroyed
+- Recognise: at exit the records still queued are missing, and later records reach stderr
+- Workaround: none
+- Fix: none, the system ends the thread before any SushiLog code runs at exit
+
+## Command line
+
+### KI-3 In PowerShell `sl build` changes folder instead of building
+- Origin: own
+- Where: `cli/pyproject.toml`
+- Cause: `sl` is PowerShell's built-in alias of `Set-Location`
+- Recognise: the prompt moves to a folder named `build`
+- Workaround: run `sushilog build`
+- Fix: none, `sushilog` is the same command under its full name

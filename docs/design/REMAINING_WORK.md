@@ -1,16 +1,16 @@
 # Remaining work
 
-The single backlog of this repository. An item names where it sits.
+Next id: RW-3
 
-## Release
+## Continuous integration
 
-- **The first build and test run.** The library, the tests and the package consumer were
-  written and syntax-checked; the first `sl build`, `sl test --label small --label medium
-  --package` and the CI run on main are the owner's.
-- **Tag v0.1.0** with the owner's approval, task 6 of SushiSkills'
-  `docs/agent/2026_10_16_SUSHILOG_REPOSITORY/PLAN.md`.
+### RW-1 Pin the Windows job's MSVC action by commit hash
+- State: open
+- Done when: `.github/workflows/ci.yml` takes `ilammy/msvc-dev-cmd` by a commit hash, not by `@v1`
 
-## CI
+## Documentation
 
-- **The CI's Windows job takes `ilammy/msvc-dev-cmd@v1` by tag**, not by commit hash
-  (`.github/workflows/ci.yml`).
+### RW-2 Give the root README its six sections
+- State: open
+- Done when: `README.md` holds the sections the `documentation` skill gives the root README,
+  `## Status` among them

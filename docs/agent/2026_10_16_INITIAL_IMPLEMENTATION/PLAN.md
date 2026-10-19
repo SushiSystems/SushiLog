@@ -1,6 +1,6 @@
 # Initial implementation
 
-Status: written; the build and the tests wait for the owner's session.
+**Status:** Shipped — 2026-10-17. Released as v0.1.0.
 
 Tasks 2 to 5 of SushiSkills' `docs/agent/2026_10_16_SUSHILOG_REPOSITORY/PLAN.md`, written inline
 by one worker. The contract is SushiSkills' `skills/logging/INTERFACE.md` and
