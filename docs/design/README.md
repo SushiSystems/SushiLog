@@ -2,8 +2,12 @@
 
 One document per topic. Look the topic up here before writing; extend the document that exists.
 
-| Topic | Document | Status |
+## Topics
+
+<!-- topics:begin -->
+| Topic | State | About |
 | --- | --- | --- |
+<!-- topics:end -->
 
 No design document is open. The contract SushiLog implements is `skills/logging/INTERFACE.md`
 and `skills/logging/SKILL.md` in SushiSkills; the plan that made the repository is
