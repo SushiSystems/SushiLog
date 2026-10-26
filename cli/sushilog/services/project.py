@@ -77,8 +77,10 @@ _RUNNER = Runner(console, PROFILE.program)
 _DRIVER = CMakeDriver(console, _RUNNER)
 
 
-def build_dir(root: Path, sanitizer: Sanitizer | None) -> Path:
-    """Returns the build tree of *sanitizer*, or of the plain build for None."""
+def build_dir(root: Path, sanitizer: Sanitizer | None, requested: str | None = None) -> Path:
+    """Returns the build tree: *requested* below *root* when given, else the one of *sanitizer*."""
+    if requested:
+        return root / requested
     return root / K_BUILD_FOLDER[sanitizer]
 
 
@@ -116,11 +118,12 @@ def _compiler_arguments(cfg: Config) -> list[str]:
 
 
 def _needs_configure(cfg: Config, tree: Path, build_type: BuildType,
-                     sanitizer: Sanitizer | None) -> bool:
+                     sanitizer: Sanitizer | None, lean: bool = False) -> bool:
     """Returns whether *tree* must be configured before it is compiled."""
     if not (tree / "CMakeCache.txt").is_file():
         return True
-    expect = {"SL_SANITIZE": sanitizer.value if sanitizer else ""}
+    expect = {"SL_SANITIZE": sanitizer.value if sanitizer else "",
+              "SL_BUILD_TESTS": _on_off(not lean)}
     if not cfg.is_multi_config():
         expect["CMAKE_BUILD_TYPE"] = K_CMAKE_BUILD_TYPE[build_type]
     generator = cfg.resolved_generator()
@@ -129,27 +132,37 @@ def _needs_configure(cfg: Config, tree: Path, build_type: BuildType,
     return any(cmake_cache.cached_value(tree, key) != value for key, value in expect.items())
 
 
+def _on_off(value: bool) -> str:
+    """Returns the CMake spelling of a boolean option."""
+    return "ON" if value else "OFF"
+
+
 def build(build_type: BuildType | None = None, clean: bool = False,
-          defines: Sequence[str] = (), sanitizer: Sanitizer | None = None) -> int:
+          defines: Sequence[str] = (), sanitizer: Sanitizer | None = None,
+          lean: bool = False, tree_path: str | None = None) -> int:
     """Configures the tree of *sanitizer* when it needs it or *defines* are given, then compiles it.
 
     Args:
         clean: Removes the tree first.
         defines: `VAR=VALUE` cache variables; any of them reconfigures a configured tree.
         sanitizer: Builds in that sanitizer's own tree, build-asan/ or build-tsan/.
+        lean: Builds no tests; what a library package is built as. SushiLog has no examples or
+            benchmarks to leave out.
+        tree_path: The tree to build in, below the project root, in place of the default one.
     """
     root = find_project_root()
     cfg = load_config()
-    tree = build_dir(root, sanitizer)
+    tree = build_dir(root, sanitizer, tree_path)
     if clean:
         _DRIVER.clean_tree(tree)
     build_type = resolve_build_type(build_type, tree)
     env = load_build_env(cfg, tree)
 
-    if defines or _needs_configure(cfg, tree, build_type, sanitizer):
+    if defines or _needs_configure(cfg, tree, build_type, sanitizer, lean):
         command = [_DRIVER.cmake(cfg), "-S", str(root), "-B", str(tree),
                    f"-DCMAKE_BUILD_TYPE={K_CMAKE_BUILD_TYPE[build_type]}",
                    f"-DSL_SANITIZE={sanitizer.value if sanitizer else ''}",
+                   f"-DSL_BUILD_TESTS={_on_off(not lean)}",
                    *_compiler_arguments(cfg)]
         for define in defines:
             command += ["-D", define]

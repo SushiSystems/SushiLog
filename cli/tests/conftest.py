@@ -84,14 +84,14 @@ class Project:
         self.tree = self.root / "build"
 
     def configure_tree(self, build_type: str = "Debug", sanitize: str = "",
-                       folder: str = "build") -> None:
+                       folder: str = "build", tests: str = "ON") -> None:
         """Plants the files a finished Ninja configure of *build_type* leaves behind."""
         tree = self.root / folder
         tree.mkdir(exist_ok=True)
         (tree / "build.ninja").write_text("", encoding="utf-8")
         (tree / "CMakeCache.txt").write_text(
             f"CMAKE_BUILD_TYPE:STRING={build_type}\nCMAKE_GENERATOR:INTERNAL=Ninja\n"
-            f"SL_SANITIZE:STRING={sanitize}\n",
+            f"SL_SANITIZE:STRING={sanitize}\nSL_BUILD_TESTS:BOOL={tests}\n",
             encoding="utf-8")
 
 

@@ -1,7 +1,7 @@
 # cli
 
-The `sl` command line interface. `sushilog/cli.py` parses the three commands, `build`, `test` and
-`check`, and `sushilog/services/project.py` does the work. The `docs` group, with its one command
+The `sl` command line interface. `sushilog/cli.py` parses the commands `build`, `test` and `check`,
+registers the shared `package` command, and `sushilog/services/project.py` does the work. The `docs` group, with its one command
 `bundle`, the config loader, the console, the process runner and the CMake driver come from
 sushicore 0.9.2. `tests/` is the pytest suite:
 `cd cli && python -m pytest tests -q`.
@@ -13,6 +13,16 @@ Configuration is layered, lowest precedence first: built-in defaults, `config.to
 toolchain: `sl` builds with the pinned `cxx`, else a clang++ on PATH, else CMake's platform
 default. A found compiler with a found ninja takes the Ninja generator; with no compiler CMake
 chooses its own.
+
+## Package contract
+
+SushiCore builds a SushiLog package for a consumer by running `sl build --type <type>
+--build-dir build/pkg-<id> --lean` and then `sl package --build-dir build/pkg-<id> --prefix <p>
+--no-archive --force` in this checkout. `--build-dir` names the tree below the checkout, and
+`--lean` builds no tests (`SL_BUILD_TESTS=OFF`); SushiLog has no examples or benchmarks. `build`
+always passes `SL_BUILD_TESTS`, so a tree switches between the two by reconfiguring. `package` is
+sushicore's shared command. `SUSHISTACK_CXX` names a compiler that outranks the configured one.
+`cli/sushistack.deps.toml` names this CLI in `[module] cli`.
 
 ## console.py
 

@@ -48,7 +48,8 @@ def test_build_passes_type_sanitizer_and_defines(calls):
     assert result.exit_code == 0
     (name, args, kwargs), = calls
     assert name == "build" and args == (BuildType.RELEASE,)
-    assert kwargs == {"clean": False, "defines": ["A=1"], "sanitizer": Sanitizer.ADDRESS}
+    assert kwargs == {"clean": False, "defines": ["A=1"], "sanitizer": Sanitizer.ADDRESS,
+                      "lean": False, "tree_path": None}
 
 
 def test_test_passes_labels_jobs_filter_and_package(calls):
