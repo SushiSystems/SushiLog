@@ -1,6 +1,7 @@
 # CLI guide
 
-`sl` builds, tests and checks SushiLog. Install it from the checkout:
+`sl` builds, tests and checks SushiLog. Install it from the checkout, or through SushiHub as
+[`INSTALL.md`](../getting_started/INSTALL.md) describes:
 
 ```bash
 pip install -e ./cli

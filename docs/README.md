@@ -2,6 +2,11 @@
 
 SushiLog is the one logger of the Sushi libraries. Start with the guide; the rest is reference.
 
+## Getting started
+
+- [`getting_started/INSTALL.md`](getting_started/INSTALL.md): the two ways to install SushiLog,
+  standalone and with SushiHub.
+
 ## Guides
 
 - [`guides/LOGGING_GUIDE.md`](guides/LOGGING_GUIDE.md): where records go, setting levels per

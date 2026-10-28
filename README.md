@@ -10,11 +10,21 @@ package `SushiLog`, with two targets: `SushiLog::SushiLog`, a shared library, an
 `SushiLog::SushiLogStatic`, a static one whose symbols stay hidden, for a plug-in a host may load
 twice.
 
+## Build
+
+Standalone, with Git, Python 3.11, CMake and a C++17 compiler:
+
 ```bash
+git clone https://github.com/SushiSystems/SushiLog.git
+cd SushiLog
 pip install -e ./cli
 sl build
 sl test --label small --label medium
 ```
+
+With SushiHub: `hub add sushilog` and `hub install-cli sushilog`, or `hub link sushilog <path>`
+for a checkout you already have. [`docs/getting_started/INSTALL.md`](docs/getting_started/INSTALL.md)
+has the prerequisites for both.
 
 The manual starts at [`docs/README.md`](docs/README.md); how to use the logger is in
 [`docs/guides/LOGGING_GUIDE.md`](docs/guides/LOGGING_GUIDE.md).

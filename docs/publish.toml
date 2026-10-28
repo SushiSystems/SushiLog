@@ -1,6 +1,6 @@
 name = "sushilog"
 title = "SushiLog"
 summary = "SushiLog is the one logger of the Sushi libraries: one queue, one thread and one sink per process."
-sections = ["guides", "reference"]
+sections = ["getting_started", "guides", "reference"]
 exclude = []
 api = false
