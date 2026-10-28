@@ -1,7 +1,5 @@
-# Build trees of `sl build`, one per sanitizer
+# Build trees of `sl build`, one per build type and sanitizer
 build/
-build-asan/
-build-tsan/
 out/
 
 # IDEs

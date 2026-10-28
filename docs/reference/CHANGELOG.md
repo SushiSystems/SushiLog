@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- 2026-10-28 — cli: Changed `sl build` and `sl test` to build Debug by default, one tree per type and sanitizer in `build/<name>-<type>/`, and refused a configure of another type into a tree (`project.py`).
+- 2026-10-28 — cli: Ran every configure with the sushicore memory gate as launcher and every compile on the hardware threads, and added `sl build --jobs` and `--report` (`project.py`, `cli.py`).
 - 2026-10-26 — deps: Moved the sushicore pin to 0.9.6 (`cli/pyproject.toml`).
 - 2026-10-26 — cli: Added `sl build --build-dir` and `--lean`, the contract of a consumer's package build (`cli.py`, `project.py`).
 - 2026-10-26 — cli: Registered the shared `package` command from sushicore (`cli.py`).

@@ -17,13 +17,19 @@ Configures the tree when it needs it, then builds the shared and the static libr
 tests and the header checks.
 
 ```bash
-sl build                      # the type the tree carries, else debug
-sl build --type release
-sl build --sanitize address   # ASan and UBSan, in build-asan/
-sl build --sanitize thread    # ThreadSanitizer, in build-tsan/
+sl build                      # Debug, in build/default-debug/
+sl build --type release       # build/default-release/
+sl build --sanitize address   # ASan and UBSan, in build/asan-debug/
+sl build --sanitize thread    # ThreadSanitizer, in build/tsan-debug/
+sl build --jobs 4 --report    # four compile jobs; time and memory peaks after
 sl build -D SL_BUILD_TESTS=OFF
 sl build --clean
 ```
+
+Each build type and sanitizer has its own tree, and a tree keeps the type it was configured
+with: `sl build --type release` never touches the Debug tree. Compiles run behind a memory gate
+that admits an edge only when its expected peak fits the free memory. Creating the file
+`build/build_gate/stop` makes the gate refuse the build until the file is deleted.
 
 ## sl test
 
@@ -38,7 +44,7 @@ sl test --sanitize thread --label medium
 sl test --package                      # also the consumer of the installed package
 ```
 
-`--package` installs the tree under `build/package-prefix/`, builds `tests/package/` against it
+`--package` installs the tree under `build/<tree>/package-prefix/`, builds `tests/package/` against it
 and runs its two programs, one per library target.
 
 ## sl check

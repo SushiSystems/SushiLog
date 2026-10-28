@@ -23,7 +23,8 @@ PROFILE = ModuleProfile(
     program="sl",
     env_prefix="SL",
     root_marker="CMakeLists.txt",
-    env_fields=("cxx", "generator", "cmake_exe", "ctest_exe", "ninja_exe", "vs_vcvars"),
+    env_fields=("cxx", "generator", "cmake_exe", "ctest_exe", "ninja_exe", "ccache_exe",
+                "vs_vcvars"),
 )
 
 #: The compiler a consumer's package build hands the CLI; it outranks the configured one.

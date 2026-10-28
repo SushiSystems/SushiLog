@@ -6,5 +6,5 @@ nothing else, refuses a target that hands it SushiLog's warnings or sanitizer, a
 program logs one record through a C++ sink and one through the C interface, and fails unless
 both arrive. On Windows the shared program gets `sushilog.dll` beside it after each link.
 
-`sl test --package` installs the build tree under `build/package-prefix/`, builds this project
-in `build/package/` against it and runs the two programs as tests.
+`sl test --package` installs the build tree under `build/<tree>/package-prefix/`, builds this project
+in `build/<tree>/package/` against it and runs the two programs as tests.

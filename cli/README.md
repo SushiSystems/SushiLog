@@ -38,7 +38,11 @@ folder first on PATH and, on Windows with `vs_vcvars` set, the Visual Studio env
 
 ## services/project.py
 
-Each sanitizer has its own build tree: `build/`, `build-asan/` and `build-tsan/`, so switching
-does not rebuild the plain tree. `sl test` leaves the quarantined tests out. `sl test --package`
+Each build type and each sanitizer has its own tree, `build/<name>-<type>/`: `default-debug`,
+`default-release`, `asan-debug`, `tsan-debug`. Debug is the default type. A configure of a tree
+with another type is refused, so switching never rebuilds a tree. Every configure sets the memory
+gate of sushicore as the compiler and linker launcher, and a compile runs the hardware threads
+unless `--jobs` says otherwise; `--report` prints the time and memory peak per kind of edge.
+Another path is `--build-dir`. `sl test` leaves the quarantined tests out. `sl test --package`
 installs the tree, builds `tests/package/` against the install and runs its two tests. `sl check`
 runs the nine shared checkers and, with `--rule`, only those whose `--list-rules` names the rule.

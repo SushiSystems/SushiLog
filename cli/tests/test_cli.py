@@ -49,7 +49,15 @@ def test_build_passes_type_sanitizer_and_defines(calls):
     (name, args, kwargs), = calls
     assert name == "build" and args == (BuildType.RELEASE,)
     assert kwargs == {"clean": False, "defines": ["A=1"], "sanitizer": Sanitizer.ADDRESS,
-                      "lean": False, "tree_path": None}
+                      "lean": False, "tree_path": None, "jobs": None, "report": False}
+
+
+def test_build_defaults_to_debug_and_forwards_jobs_and_report(calls):
+    result = _RUNNER.invoke(cli.app, ["build", "--jobs", "2", "--report"])
+
+    assert result.exit_code == 0
+    (name, args, kwargs), = calls
+    assert args == (BuildType.DEBUG,) and kwargs["jobs"] == 2 and kwargs["report"] is True
 
 
 def test_test_passes_labels_jobs_filter_and_package(calls):
@@ -58,7 +66,7 @@ def test_test_passes_labels_jobs_filter_and_package(calls):
 
     assert result.exit_code == 0
     (name, args, kwargs), = calls
-    assert name == "test" and args == (None, [Size.SMALL, Size.MEDIUM])
+    assert name == "test" and args == (BuildType.DEBUG, [Size.SMALL, Size.MEDIUM])
     assert kwargs["jobs"] == 3 and kwargs["filter"] == "X.*" and kwargs["package"] is True
 
 

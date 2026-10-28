@@ -14,6 +14,8 @@ import sys
 from pathlib import Path
 
 import pytest
+from sushicore import build_admission
+from sushicore.errors import ConfigError
 
 from sushilog.services import project as project_service
 from sushilog.services.project import BuildType, Sanitizer, Size
@@ -41,6 +43,7 @@ def test_build_configures_an_empty_tree_then_compiles(project):
 
     configure, compile_ = project.runner.commands
     assert _is_configure(configure) and _is_compile(compile_)
+    assert Path(_value_after(configure, "-B")) == project.root / "build" / "default-release"
     assert "-DCMAKE_BUILD_TYPE=Release" in configure
     assert "-DSL_SANITIZE=" in configure
     assert "-DCMAKE_CXX_COMPILER=clang++" in configure
@@ -67,14 +70,15 @@ def test_build_with_a_sanitizer_uses_its_own_tree(project):
     assert project_service.build(BuildType.DEBUG, sanitizer=Sanitizer.THREAD) == 0
 
     configure = project.runner.commands[0]
-    assert Path(_value_after(configure, "-B")).name == "build-tsan"
+    assert Path(_value_after(configure, "-B")).name == "tsan-debug"
     assert "-DSL_SANITIZE=thread" in configure
 
 
 def test_test_passes_the_sizes_the_jobs_and_the_filter_to_ctest(project):
     project.configure_tree("Debug")
 
-    assert project_service.test(None, (Size.MEDIUM, Size.SMALL), filter="Small_.*", jobs=4) == 0
+    assert project_service.test(BuildType.DEBUG, (Size.MEDIUM, Size.SMALL), filter="Small_.*",
+                                jobs=4) == 0
 
     ctest = project.runner.commands[-1]
     assert _value_after(ctest, "-L") == "^(medium|small)$"
@@ -142,8 +146,96 @@ def test_rules_of_reads_the_list_rules_flag(tmp_path):
     assert project_service.rules_of(checker) == frozenset({"rule_a", "rule_b"})
 
 
-def test_resolve_build_type_reads_the_tree_when_none_is_asked(project):
-    project.configure_tree("RelWithDebInfo")
+def test_the_default_build_type_is_debug(project):
+    assert project_service.K_DEFAULT_TYPE is BuildType.DEBUG
 
-    assert project_service.resolve_build_type(None, project.tree) == BuildType.RELWITHDEBINFO
-    assert project_service.resolve_build_type(BuildType.DEBUG, project.tree) == BuildType.DEBUG
+    assert project_service.build() == 0
+
+    configure = project.runner.commands[0]
+    assert "-DCMAKE_BUILD_TYPE=Debug" in configure
+    assert Path(_value_after(configure, "-B")) == project.tree
+
+
+@pytest.mark.parametrize("build_type", list(BuildType))
+def test_each_build_type_has_its_own_tree(project, build_type):
+    expected = project.root / "build" / f"default-{build_type.value}"
+
+    assert project_service.build_dir(project.root, None, build_type) == expected
+
+
+def test_a_sanitizer_tree_is_named_by_sanitizer_and_type(project):
+    tree = project_service.build_dir(project.root, Sanitizer.ADDRESS, BuildType.RELEASE)
+
+    assert tree == project.root / "build" / "asan-release"
+
+
+def test_an_explicit_build_dir_overrides_the_named_tree(project):
+    tree = project_service.build_dir(project.root, None, BuildType.DEBUG, "build/pkg-x")
+
+    assert tree == project.root / "build" / "pkg-x"
+
+
+def test_a_tree_of_another_type_is_not_configured(project):
+    tree = project.configure_tree("Debug")
+    cache = tree / "CMakeCache.txt"
+    cache.write_text(cache.read_text(encoding="utf-8").replace("=Debug", "=Release"),
+                     encoding="utf-8")
+
+    with pytest.raises(ConfigError, match="Release tree"):
+        project_service.build(BuildType.DEBUG)
+
+    assert project.runner.commands == []
+
+
+def test_a_define_naming_the_build_type_is_refused(project):
+    with pytest.raises(ConfigError, match="CMAKE_BUILD_TYPE"):
+        project_service.build(defines=["CMAKE_BUILD_TYPE=Release"])
+
+
+def test_a_stopped_gate_refuses_the_build(project):
+    stop = build_admission.stop_file(project.tree)
+    stop.parent.mkdir(parents=True)
+    stop.write_text("", encoding="utf-8")
+
+    with pytest.raises(build_admission.BuildStoppedError):
+        project_service.build()
+
+    assert project.runner.commands == []
+
+
+def test_a_configure_carries_both_gate_launchers(project):
+    assert project_service.build() == 0
+
+    configure = project.runner.commands[0]
+    gate = build_admission.launcher_defines(project.tree)
+    defines = [configure[i + 1] for i, part in enumerate(configure) if part == "-D"]
+    assert any(d.startswith("CMAKE_CXX_COMPILER_LAUNCHER=") for d in defines)
+    assert any(d.startswith("CMAKE_CXX_LINKER_LAUNCHER=") for d in defines)
+    assert [d.split("=", 1)[0] for d in gate] == [d.split("=", 1)[0] for d in defines
+                                                  if "LAUNCHER" in d]
+
+
+def test_a_compile_gets_the_hardware_threads_without_jobs(project):
+    project.configure_tree("Debug")
+
+    assert project_service.build() == 0
+
+    compile_ = project.runner.commands[0]
+    assert _value_after(compile_, "--parallel") == str(build_admission.hardware_threads())
+
+
+def test_a_compile_gets_the_jobs_the_user_gave(project):
+    project.configure_tree("Debug")
+
+    assert project_service.build(jobs=3) == 0
+
+    assert _value_after(project.runner.commands[0], "--parallel") == "3"
+
+
+def test_a_report_prints_after_the_compile(project):
+    project.configure_tree("Debug")
+
+    assert project_service.build(report=True) == 0
+
+    assert project.console.of("info")[-1].startswith("Report: ")
+    assert (project.tree / "build_report.json").is_file()

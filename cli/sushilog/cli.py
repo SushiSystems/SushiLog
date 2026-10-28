@@ -25,14 +25,14 @@ from sushicore.typer_help import help_group
 from . import console
 from .config import PROFILE, find_project_root, load_config
 from .services import project as project_service
-from .services.project import BuildType, Sanitizer, Size
+from .services.project import K_DEFAULT_TYPE, BuildType, Sanitizer, Size
 
 K_PROGRAM = "sl"
 K_DISTRIBUTION = "sushilog-cli"
 K_PANEL = "Build"
 
-K_TYPE_HELP = ("Build type: debug | release | relwithdebinfo. "
-               "Defaults to the type the build tree carries, else debug.")
+K_TYPE_HELP = ("Build type: debug | release | relwithdebinfo. Each type has its own tree. "
+               f"Default: {K_DEFAULT_TYPE.value}.")
 
 _help_group = help_group(console.current)
 
@@ -48,7 +48,7 @@ app = typer.Typer(
 
 def _type_option() -> Any:
     """Returns the default of a `--type/-t` parameter."""
-    return typer.Option(None, "--type", "-t", case_sensitive=False, help=K_TYPE_HELP)
+    return typer.Option(K_DEFAULT_TYPE, "--type", "-t", case_sensitive=False, help=K_TYPE_HELP)
 
 
 def _sanitize_option() -> Any:
@@ -61,13 +61,21 @@ def _sanitize_option() -> Any:
 def _build_dir_option() -> Any:
     """Returns the default of a `--build-dir` parameter."""
     return typer.Option(None, "--build-dir", metavar="PATH",
-                        help="Build in this tree, below the checkout, instead of build/.")
+                        help="Build in this tree, below the checkout, instead of "
+                             "build/default-<type>/.")
 
 
 def _lean_option() -> Any:
     """Returns the default of a `--lean` parameter."""
     return typer.Option(False, "--lean",
                         help="Build no tests; what a consumer's package build of SushiLog uses.")
+
+
+def _report_option() -> Any:
+    """Returns the default of a `--report` parameter."""
+    return typer.Option(False, "--report",
+                        help="After the compile, print and write the build report: time, count "
+                             "and memory peak per kind of edge, the slowest edges.")
 
 
 def _clean_option() -> Any:
@@ -80,11 +88,12 @@ def _clean_option() -> Any:
     rich_help_panel=K_PANEL,
     epilog="sl build\n"
            "sl build --type release\n"
-           "sl build --sanitize address  # ASan and UBSan, in build-asan/\n"
+           "sl build --report  # Time and memory peaks of the compile\n"
+           "sl build --sanitize address  # ASan and UBSan, in build/asan-debug/\n"
            "sl build --build-dir build/pkg-x --lean  # What a consumer's package build runs",
 )
 def build(
-    type: Optional[BuildType] = _type_option(),
+    type: BuildType = _type_option(),
     clean: bool = _clean_option(),
     define: Optional[list[str]] = typer.Option(
         None, "--define", "-D", metavar="VAR=VALUE",
@@ -92,10 +101,15 @@ def build(
     sanitize: Optional[Sanitizer] = _sanitize_option(),
     build_dir: Optional[str] = _build_dir_option(),
     lean: bool = _lean_option(),
+    jobs: Optional[int] = typer.Option(
+        None, "--jobs", "-j", min=1,
+        help="Compile jobs. When omitted: the hardware threads, behind the memory gate."),
+    report: bool = _report_option(),
 ) -> None:
     """Configure when needed, then build the libraries and the tests."""
     raise typer.Exit(project_service.build(type, clean=clean, defines=define or (),
-                                           sanitizer=sanitize, lean=lean, tree_path=build_dir))
+                                           sanitizer=sanitize, lean=lean, tree_path=build_dir,
+                                           jobs=jobs, report=report))
 
 
 @app.command(
@@ -107,7 +121,7 @@ def build(
            "sl test --package  # Also build tests/package/ against the install",
 )
 def test(
-    type: Optional[BuildType] = _type_option(),
+    type: BuildType = _type_option(),
     label: Optional[list[Size]] = typer.Option(
         None, "--label", "-l", case_sensitive=False,
         help="Test size to run: small | medium | large; repeat for more. Default: every size."),
