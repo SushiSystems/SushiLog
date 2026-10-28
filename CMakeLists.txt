@@ -17,6 +17,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+include("${SL_CMAKE_DIR}/SushiLogAbiPinning.cmake")
 include("${SL_CMAKE_DIR}/SushiLogBuildPolicy.cmake")
 include("${SL_CMAKE_DIR}/SushiLogRuntimeFiles.cmake")
 include("${SL_CMAKE_DIR}/SushiLogModule.cmake")

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- 2026-10-28 — build: Took the release C runtime, no iterator checking and Release imports in every build type, with line tables for a Clang Debug (`SushiLogAbiPinning.cmake`).
 - 2026-10-28 — cli: Changed `sl build` and `sl test` to build Debug by default, one tree per type and sanitizer in `build/<name>-<type>/`, and refused a configure of another type into a tree (`project.py`).
 - 2026-10-28 — cli: Ran every configure with the sushicore memory gate as launcher and every compile on the hardware threads, and added `sl build --jobs` and `--report` (`project.py`, `cli.py`).
 - 2026-10-26 — deps: Moved the sushicore pin to 0.9.6 (`cli/pyproject.toml`).
