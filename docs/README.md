@@ -17,14 +17,14 @@ SushiLog is the one logger of the Sushi libraries. Start with the guide; the res
 ## Reference
 
 - [`reference/CHANGELOG.md`](reference/CHANGELOG.md)
-- [`reference/KNOWN_ISSUES.md`](reference/KNOWN_ISSUES.md)
+- [`backlog/README.md`](backlog/README.md)
 - [`reference/GLOSSARY.md`](reference/GLOSSARY.md)
 
 ## Working on SushiLog
 
 - [`CONTRIBUTING.md`](CONTRIBUTING.md): what a change contains and how it lands.
 - [`DOCUMENTATION_STYLE_GUIDE.md`](DOCUMENTATION_STYLE_GUIDE.md)
-- [`design/README.md`](design/README.md) and [`design/REMAINING_WORK.md`](design/REMAINING_WORK.md)
+- [`design/README.md`](design/README.md) and [`backlog/README.md`](backlog/README.md)
 - The modules: [`log`](../modules/foundation/log/README.md) and
   [`umbrella`](../modules/foundation/umbrella/README.md); the tests: [`tests`](../tests/README.md);
   the CLI: [`cli`](../cli/README.md); the checkers: [`tools`](../tools/README.md).
