@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- 2026-10-29 — cli: Added the `backlog` and `design` groups and asked for sushicore 0.10.2 (`cli.py`).
 - 2026-10-28 — docs: Described installing standalone and with SushiHub, and named the file that pins sushicore (`README.md`, `INSTALL.md`, `NOTICE.md`).
 - 2026-10-28 — build: Took the release C runtime, no iterator checking and Release imports in every build type, with line tables for a Clang Debug (`SushiLogAbiPinning.cmake`).
 - 2026-10-28 — cli: Changed `sl build` and `sl test` to build Debug by default, one tree per type and sanitizer in `build/<name>-<type>/`, and refused a configure of another type into a tree (`project.py`).
