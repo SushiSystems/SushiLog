@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- 2026-10-29 — build: Let a Debug tree link an imported package built as `None`, such as Ubuntu's GTest (`cmake/`).
 ## v0.3.0 — 2026-10-29
 
 - 2026-10-29 — cli: Added the `backlog` and `design` groups and asked for sushicore 0.10.2 (`cli.py`).
