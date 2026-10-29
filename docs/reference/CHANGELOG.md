@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.3.0 — 2026-10-29
+
 - 2026-10-29 — cli: Added the `backlog` and `design` groups and asked for sushicore 0.10.2 (`cli.py`).
 - 2026-10-28 — docs: Described installing standalone and with SushiHub, and named the file that pins sushicore (`README.md`, `INSTALL.md`, `NOTICE.md`).
 - 2026-10-28 — build: Took the release C runtime, no iterator checking and Release imports in every build type, with line tables for a Clang Debug (`SushiLogAbiPinning.cmake`).
@@ -13,8 +15,3 @@
 - 2026-10-26 — cli: Made `sl` honour `SUSHISTACK_CXX` over its configured compiler (`config.py`).
 - 2026-10-26 — deps: Added `cli/sushistack.deps.toml`, which names the CLI `sl` in `[module] cli`.
 - 2026-10-19 — docs: Moved the backlog and the known issues to the SushiSkills entry format and took the backlog checker with the shared tools (`REMAINING_WORK.md`, `KNOWN_ISSUES.md`, `check_backlog.py`).
-
-## v0.2.3 — 2026-10-19
-
-- 2026-10-19 — ci: Added the release job that builds the documentation bundle after CI and attaches it to the tag's release (`.github/workflows/release.yml`, `ci.yml`).
-- 2026-10-19 — cli: Added `sl docs bundle`, registered from SushiCore, and moved the sushicore pin to 0.9.2 (`cli/sushilog/cli.py`, `cli/pyproject.toml`).
