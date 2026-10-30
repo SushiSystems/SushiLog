@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- 2026-10-30 — build: Let the package consumer's Debug import fall back to the Debug install, and installed the CLI, which brings sushicore, before the CI checkers (`tests/package/`, `ci.yml`).
+- 2026-10-30 — continuous_integration: Turn the red CI green: install sushicore for the checkers, map Debug in the package test (RW-13, `e890c45`).
 - 2026-10-29 — build: Let a Debug tree link an imported package built as `None`, such as Ubuntu's GTest (`cmake/`).
 ## v0.3.0 — 2026-10-29
 
