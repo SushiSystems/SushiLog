@@ -22,12 +22,14 @@ from sushicore.entry import run as run_app
 from sushicore.provision.commands import ModuleProvision
 from sushicore.provision.package_command import register_package_command
 from sushicore.root_options import register_root_options
+from sushicore.testing import (TestLabel, all_option, filter_option, jobs_option, label_option,
+                               repeat_option)
 from sushicore.typer_help import help_group
 
 from . import console
 from .config import PROFILE, find_project_root, load_config
 from .services import project as project_service
-from .services.project import K_DEFAULT_TYPE, BuildType, Sanitizer, Size
+from .services.project import K_DEFAULT_TYPE, BuildType, Sanitizer
 
 K_PROGRAM = "sl"
 K_DISTRIBUTION = "sushilog-cli"
@@ -117,30 +119,29 @@ def build(
 @app.command(
     "test",
     rich_help_panel=K_PANEL,
-    epilog="sl test  # Every size\n"
+    epilog="sl test  # Small and medium\n"
            "sl test --label small --label medium  # What a pull request runs\n"
+           "sl test --all  # Every size, the large tests included\n"
            "sl test --filter 'Small_LogLevels.*' --jobs 4\n"
            "sl test --package  # Also build tests/package/ against the install",
 )
 def test(
     type: BuildType = _type_option(),
-    label: Optional[list[Size]] = typer.Option(
-        None, "--label", "-l", case_sensitive=False,
-        help="Test size to run: small | medium | large; repeat for more. Default: every size."),
-    filter: Optional[str] = typer.Option(
-        None, "--filter", "-f", help="ctest -R regex over 'Suite.Case' test names."),
-    jobs: Optional[int] = typer.Option(
-        None, "--jobs", "-j", min=1,
-        help="Tests run at once. When omitted ctest decides."),
+    label: Optional[list[TestLabel]] = label_option(),
+    filter: Optional[str] = filter_option(),
+    repeat: int = repeat_option(),
+    jobs: Optional[int] = jobs_option(),
+    all_sizes: bool = all_option(),
     clean: bool = _clean_option(),
     sanitize: Optional[Sanitizer] = _sanitize_option(),
     package: bool = typer.Option(
         False, "--package",
         help="Install the tree, build tests/package/ against it and run its two tests."),
 ) -> None:
-    """Build when needed, then run ctest over the sizes and the filter."""
+    """Build when needed, then run the tests of the sizes and the filter, then print the budget line."""
     raise typer.Exit(project_service.test(type, label or (), clean=clean, filter=filter,
-                                          sanitizer=sanitize, jobs=jobs, package=package))
+                                          sanitizer=sanitize, jobs=jobs, package=package,
+                                          repeat=repeat, every_size=all_sizes))
 
 
 @app.command(

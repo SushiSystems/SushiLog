@@ -18,7 +18,8 @@ from sushicore import build_admission
 from sushicore.errors import ConfigError
 
 from sushilog.services import project as project_service
-from sushilog.services.project import BuildType, Sanitizer, Size
+from sushicore.testing import TestLabel
+from sushilog.services.project import BuildType, Sanitizer
 
 pytestmark = pytest.mark.medium
 
@@ -77,23 +78,26 @@ def test_build_with_a_sanitizer_uses_its_own_tree(project):
 def test_test_passes_the_sizes_the_jobs_and_the_filter_to_ctest(project):
     project.configure_tree("Debug")
 
-    assert project_service.test(BuildType.DEBUG, (Size.MEDIUM, Size.SMALL), filter="Small_.*",
+    assert project_service.test(BuildType.DEBUG, (TestLabel.MEDIUM, TestLabel.SMALL), filter="Small_.*",
                                 jobs=4) == 0
 
     ctest = project.runner.commands[-1]
-    assert _value_after(ctest, "-L") == "^(medium|small)$"
+    assert _value_after(ctest, "-L") == "^(small|medium)$"
     assert _value_after(ctest, "-R") == "Small_.*"
     assert _value_after(ctest, "--parallel") == "4"
-    assert _value_after(ctest, "-LE") == "quarantined"
+    assert _value_after(ctest, "-LE") == "^quarantined$"
+    assert "--output-junit" in ctest
     assert _value_after(ctest, "-C") == "Debug"
 
 
-def test_test_without_a_size_runs_every_size(project):
+def test_test_without_a_size_runs_small_and_medium_and_refuses_an_unfiltered_large_run(project):
     project.configure_tree("Debug")
 
     assert project_service.test() == 0
+    assert _value_after(project.runner.commands[-1], "-L") == "^(small|medium)$"
 
-    assert "-L" not in project.runner.commands[-1]
+    assert project_service.test(sizes=(TestLabel.LARGE,)) == 2
+    assert _is_compile(project.runner.commands[-1])
 
 
 def test_test_with_package_installs_then_builds_and_runs_the_consumer(project):

@@ -23,6 +23,7 @@ from sushicore import build_admission, build_report, cmake_cache
 from sushicore.build_tree import K_DEFAULT_BUILD_TYPE, refuse_another_build_type, tree_dir
 from sushicore.cmake_driver import CMakeDriver
 from sushicore.proc import Runner
+from sushicore.testing import ModuleTests, TestLabel, run_tests, select_labels
 from sushicore.toolchain_args import c_compiler_for
 
 from .. import console
@@ -36,14 +37,6 @@ class BuildType(str, enum.Enum):
     DEBUG = "debug"
     RELEASE = "release"
     RELWITHDEBINFO = "relwithdebinfo"
-
-
-class Size(str, enum.Enum):
-    """Names the test sizes `--label` accepts; each is a CTest label of SushiLogTests.cmake."""
-
-    SMALL = "small"
-    MEDIUM = "medium"
-    LARGE = "large"
 
 
 class Sanitizer(str, enum.Enum):
@@ -90,13 +83,6 @@ def build_dir(root: Path, sanitizer: Sanitizer | None, build_type: BuildType,
     if requested:
         return root / requested
     return tree_dir(root, K_TREE_NAME[sanitizer], K_CMAKE_BUILD_TYPE[build_type])
-
-
-def size_label_regex(sizes: Sequence[Size]) -> str | None:
-    """Returns the ctest -L regex that selects *sizes*, or None for every size."""
-    if not sizes:
-        return None
-    return "^(" + "|".join(sorted({size.value for size in sizes})) + ")$"
 
 
 def _compiler_arguments(cfg: Config) -> list[str]:
@@ -188,18 +174,21 @@ def build(build_type: BuildType = K_DEFAULT_TYPE, clean: bool = False,
     return rc
 
 
-def test(build_type: BuildType = K_DEFAULT_TYPE, sizes: Sequence[Size] = (), clean: bool = False,
+def test(build_type: BuildType = K_DEFAULT_TYPE, sizes: Sequence[TestLabel] = (), clean: bool = False,
          filter: str | None = None, sanitizer: Sanitizer | None = None,
-         jobs: int | None = None, package: bool = False) -> int:
-    """Builds when needed, then runs ctest over the tests *sizes* and *filter* select.
+         jobs: int | None = None, package: bool = False, repeat: int = 0,
+         every_size: bool = False) -> int:
+    """Builds when needed, then runs the tests *sizes* and *filter* select through the shared test command.
 
     Args:
-        sizes: The sizes to run; none runs every size.
+        sizes: The sizes to run; none runs small and medium.
         filter: A ctest -R regex over the `Suite.Case` names.
         sanitizer: Builds and tests that sanitizer's tree.
         jobs: Tests run at once; none leaves the count to ctest.
         package: Also installs the tree, builds tests/package/ against the install and runs
             its two tests, one per library target.
+        repeat: Reruns each test up to this many times, stopping at its first failure.
+        every_size: Runs every size, the large tests included.
     """
     rc = build(build_type, clean=clean, sanitizer=sanitizer)
     if rc != 0:
@@ -210,9 +199,12 @@ def test(build_type: BuildType = K_DEFAULT_TYPE, sizes: Sequence[Size] = (), cle
     tree = build_dir(root, sanitizer, build_type)
     config = K_CMAKE_BUILD_TYPE[build_type]
     env = load_build_env(cfg, tree)
-    rc = _DRIVER.ctest_run(cfg, tree, env, label_regex=size_label_regex(sizes),
-                           exclude_label_regex="quarantined", filter=filter, jobs=jobs,
-                           config=config)
+    module = ModuleTests(
+        profile=PROFILE, project_root=lambda: root, console=lambda: console,
+        build_tree=lambda: tree, run=_RUNNER.run,
+        run_ctest=lambda directory, **options: _DRIVER.ctest_run(cfg, directory, env, config=config, **options))
+    selection = select_labels(sizes, every_size=every_size)
+    rc = run_tests(module, selection, name_filter=filter, repeat=repeat, jobs=jobs, every_size=every_size)
     if rc != 0 or not package:
         return rc
     return _test_package(root, cfg, tree, env, config)

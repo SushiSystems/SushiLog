@@ -34,13 +34,16 @@ that admits an edge only when its expected peak fits the free memory. Creating t
 
 ## sl test
 
-Builds when needed, then runs the tests. The quarantined ones are left out.
+Builds when needed, then runs the tests. The quarantined ones are left out. Without a label it runs `small`
+and `medium`; `large` needs `--filter` or `--all`. CTest writes a JUnit file under the tree's `Testing` folder,
+and a repository that carries the shared budget reader prints one budget line after the run.
 
 ```bash
-sl test                                # every size
+sl test                                # small and medium
 sl test --label small --label medium   # what a pull request runs
 sl test --filter 'Small_LogLevels.*'   # ctest -R over Suite.Case
 sl test --jobs 4                       # four tests at once
+sl test --all                          # every size; the large ones need real hardware
 sl test --sanitize thread --label medium
 sl test --package                      # also the consumer of the installed package
 ```
