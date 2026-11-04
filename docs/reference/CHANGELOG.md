@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- 2026-11-05 — tools: Took the shared checkers of 2026-11-05 with a baseline of the findings they meet, which RW-15 clears.
 - 2026-10-31 — cli: Ran `sl test` through the shared test options and `run_tests` of sushicore, so it runs small and medium by default and prints the budget line (RW-14, `a866aa4`).
 - 2026-10-30 — continuous_integration: Turn the red CI green: install sushicore for the checkers, map Debug in the package test (RW-13, `e890c45`).
 - 2026-10-29 — build: Let a Debug tree link an imported package built as `None`, such as Ubuntu's GTest (`cmake/`).
