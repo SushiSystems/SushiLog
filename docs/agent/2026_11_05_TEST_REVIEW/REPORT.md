@@ -31,11 +31,13 @@ checkers' tests.
 - `tools/tests/test_test_budget_settings.py` skips here, since the repository has no `skills/` folder, so
   its promise is checked nowhere; it also defines `read_budget` and `differences` in the test file.
 
-## The owner's decisions waiting
+## Decisions
 
-1. The unseen-project WARN: the header or the code.
-2. A seam on the process-wide logger that lets a small test install an in-memory sink, for this
-   repository and for every user of SushiLog.
+The owner delegated these decisions on 2026-11-05. Each ruling below is final for the plan; its reason follows it.
+
+1. The unseen-project WARN: the header changes. Levels are often set from configuration before any logger of that project registers, so a warning there would fire on correct start-up. The test that asserts no WARN stays.
+2. SushiLog's seam is a scoped in-memory sink: a guard that swaps the process-wide logger's sink for one test and restores it on exit. Routing a logger through every call site in every repository would cost more than it returns, and small tests run one at a time in their process. The in-memory sink is public, and every repository's log captures move onto it.
+3. The size timeouts follow the testing skill: 1 s, 10 s and 120 s. The skill is the one home of these numbers; a measurement on the owner's machine changes the skill, not a repository.
 
 ## Dispatches
 
