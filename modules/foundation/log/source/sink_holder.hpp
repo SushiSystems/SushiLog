@@ -71,6 +71,14 @@ namespace SushiLog::Detail
             [[nodiscard]] bool replace(LogSink sink);
 
             /**
+             * @brief Swaps @p sink in once no call into the old one runs, and leaves the old one
+             *        in @p sink.
+             * @return False, changing nothing on either side, when called from inside the sink or
+             *         after the sink was abandoned.
+             */
+            [[nodiscard]] bool exchange(LogSink& sink);
+
+            /**
              * @brief Marks the sink abandoned when its mutex is held at shut-down, which happens
              *        only when the system ended a thread inside a sink call.
              * @return True when the sink was abandoned; every later record goes to stderr.

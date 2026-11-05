@@ -88,6 +88,12 @@ namespace SushiLog::Detail
         });
     }
 
+    bool LogWriter::is_synchronous()
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return synchronous_;
+    }
+
     void LogWriter::shut_down()
     {
         std::thread worker;

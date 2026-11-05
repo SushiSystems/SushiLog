@@ -32,7 +32,7 @@
 
 #include <gtest/gtest.h>
 
-#include "recording_sink.hpp"
+#include <SushiLog/log/log_capture.hpp>
 #include "sample_front.hpp"
 
 namespace
@@ -91,48 +91,48 @@ TEST(Small_LogLevels, SettingAProjectTouchesNoOtherProject)
 
 TEST(Small_LogLevels, AProjectSetBeforeItsFirstCategoryAppliesToIt)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
     constexpr SushiLog::LogProject early{"earlytest", "EARLYTEST_LOG_LEVEL"};
 
     SushiLog::set_log_level(early, LogLevel::Trace);
 
-    EXPECT_TRUE(recording.sink().lines().empty());
+    EXPECT_TRUE(recording.records().empty());
     EXPECT_EQ(SushiLog::log_level(early), LogLevel::Trace);
     EXPECT_EQ(SushiLog::log_level(SushiLog::make_log_category(early, "later")), LogLevel::Trace);
 }
 
 TEST(Small_LogLevels, ReadingAnUnseenProjectGivesItsDefaultAndWritesNothing)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
     constexpr SushiLog::LogProject unread{"unreadtest", "UNREADTEST_LOG_LEVEL"};
 
     EXPECT_EQ(SushiLog::log_level(unread), LogLevel::Warn);
-    EXPECT_TRUE(recording.sink().lines().empty());
+    EXPECT_TRUE(recording.records().empty());
 }
 
 TEST(Small_LogLevels, ALogCallPassesAtOrAboveItsCategoryLevel)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
     SushiLog::set_log_level(K_GRAPH_LOG_CATEGORY, LogLevel::Info);
 
     SAMPLE_LOG_DEBUG(K_GRAPH_LOG_CATEGORY, "below");
     SAMPLE_LOG_INFO(K_GRAPH_LOG_CATEGORY, "at");
     SAMPLE_LOG_ERROR(K_GRAPH_LOG_CATEGORY, "above");
 
-    EXPECT_EQ(recording.sink().count_of("below"), 0u);
-    EXPECT_EQ(recording.sink().count_of("at"), 1u);
-    EXPECT_EQ(recording.sink().count_of("above"), 1u);
+    EXPECT_EQ(recording.count_of("below"), 0u);
+    EXPECT_EQ(recording.count_of("at"), 1u);
+    EXPECT_EQ(recording.count_of("above"), 1u);
 }
 
 TEST(Small_LogLevels, LogAtWritesTheGivenCallSitePastEveryLevel)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
     SushiLog::set_log_level(K_GRAPH_LOG_CATEGORY, LogLevel::Off);
 
     SushiLog::log_at(LogLevel::Error, K_GRAPH_LOG_CATEGORY, "failing.cpp", 42, "check failed");
 
-    ASSERT_EQ(recording.sink().lines().size(), 1u);
-    const SushiLogTests::RecordedLine line = recording.sink().lines()[0];
+    ASSERT_EQ(recording.records().size(), 1u);
+    const SushiLog::CapturedRecord line = recording.records()[0];
     EXPECT_EQ(line.file, "failing.cpp");
     EXPECT_EQ(line.line, 42u);
     EXPECT_EQ(line.message, "check failed");

@@ -71,6 +71,9 @@ namespace SushiLog::Detail
              */
             void set_synchronous(bool synchronous);
 
+            /** @brief Returns whether each record is delivered on the thread that wrote it. */
+            [[nodiscard]] bool is_synchronous();
+
             /** @brief Stops the thread and delivers what it left queued on this thread. */
             void shut_down();
 

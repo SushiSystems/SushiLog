@@ -36,7 +36,7 @@
 
 #include <SushiLog/log/log_calls.hpp>
 
-#include "recording_sink.hpp"
+#include <SushiLog/log/log_capture.hpp>
 #include "sample_front.hpp"
 
 namespace
@@ -116,13 +116,13 @@ TEST(Small_LogCSink, ACSinkReceivesEveryFieldWithItsSize)
 
 TEST(Small_LogCSink, ForwardRecordKeepsTimeAndRenumbersTheThread)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
     const SushiLogRecord record = foreign_record();
 
     sl_forward_record(&record, nullptr);
 
-    ASSERT_EQ(recording.sink().lines().size(), 1u);
-    const SushiLogTests::RecordedLine line = recording.sink().lines()[0];
+    ASSERT_EQ(recording.records().size(), 1u);
+    const SushiLog::CapturedRecord line = recording.records()[0];
     EXPECT_EQ(line.level, SushiLog::LogLevel::Error);
     EXPECT_EQ(line.project, "hostproject");
     EXPECT_EQ(line.module, "input");
@@ -136,14 +136,14 @@ TEST(Small_LogCSink, ForwardRecordKeepsTimeAndRenumbersTheThread)
 
 TEST(Small_LogCSink, ForwardRecordReadsOnlyTheFieldsItsSizeCovers)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
     SushiLogRecord record = foreign_record();
     record.size = static_cast<std::uint32_t>(offsetof(SushiLogRecord, thread));
 
     sl_forward_record(&record, nullptr);
 
-    ASSERT_EQ(recording.sink().lines().size(), 1u);
-    const SushiLogTests::RecordedLine line = recording.sink().lines()[0];
+    ASSERT_EQ(recording.records().size(), 1u);
+    const SushiLog::CapturedRecord line = recording.records()[0];
     EXPECT_EQ(line.line, 77u);
     EXPECT_EQ(line.time_ns, 0);
     EXPECT_EQ(line.message, "");

@@ -103,8 +103,13 @@ writes the record and the reason to stderr instead of waiting forever. A sink th
 nothing: the exception and the record go to stderr.
 
 `set_log_synchronous(true)` first waits for the queue, then delivers every record on the calling
-thread. Tests use it to read records in order; a host that wants records in the order they were
-made uses it too.
+thread. A host that wants records in the order they were made uses it. `log_synchronous()` says
+which mode is set, and `exchange_log_sink` swaps a sink in and hands back the one it replaced.
+
+A test reads records through `SushiLog::LogCapture` from `SushiLog/log/log_capture.hpp`. While it
+lives, every record goes to its in-memory `LogRecorder` before the log call returns; on exit it puts
+back the sink and the mode it found, so two captures nest. `records()` and `count_of(message)` read
+what it kept.
 
 A host outside C++ uses the C interface in `SushiLog/log/log_c_sink.h`. The consumer test does
 both:

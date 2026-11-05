@@ -32,7 +32,7 @@
 
 #include <gtest/gtest.h>
 
-#include "recording_sink.hpp"
+#include <SushiLog/log/log_capture.hpp>
 #include "sample_front.hpp"
 
 namespace
@@ -64,7 +64,7 @@ TEST(Medium_LogReentry, ARecordLoggedFromInsideTheSinkGoesToStderr)
 
 TEST(Medium_LogReentry, ASinkThatSetsTheSinkChangesNothing)
 {
-    SushiLogTests::RecordingSink other;
+    SushiLog::LogRecorder other;
     int calls = 0;
     SushiLog::set_log_synchronous(true);
     SushiLog::set_log_sink(SushiLog::LogSink([&calls, &other](const SushiLog::LogRecord&)
@@ -80,7 +80,7 @@ TEST(Medium_LogReentry, ASinkThatSetsTheSinkChangesNothing)
     SushiLog::set_log_sink(SushiLog::LogSink());
 
     EXPECT_EQ(calls, 2);
-    EXPECT_TRUE(other.lines().empty());
+    EXPECT_TRUE(other.records().empty());
     EXPECT_NE(err.find("a sink set the sink from inside its own call"), std::string::npos);
 }
 

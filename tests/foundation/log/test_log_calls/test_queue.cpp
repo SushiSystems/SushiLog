@@ -35,7 +35,6 @@
 
 #include <gtest/gtest.h>
 
-#include "recording_sink.hpp"
 #include "sample_front.hpp"
 
 namespace

@@ -123,6 +123,12 @@ namespace SushiLog::Detail
 
     bool SinkHolder::replace(LogSink sink)
     {
+        // The old sink leaves in the parameter and dies after exchange() unlocks.
+        return exchange(sink);
+    }
+
+    bool SinkHolder::exchange(LogSink& sink)
+    {
         if (t_delivering)
         {
             write_stderr_line("[SushiLog] a sink set the sink from inside its own call; the "
@@ -133,7 +139,6 @@ namespace SushiLog::Detail
         if (abandoned_.load(std::memory_order_acquire))
             return false;
 
-        // The old sink leaves in the parameter and dies after the unlock.
         std::lock_guard<std::mutex> lock(mutex_);
         std::swap(sink_, sink);
         return true;

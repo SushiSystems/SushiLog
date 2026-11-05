@@ -36,7 +36,7 @@
 
 #include <gtest/gtest.h>
 
-#include "recording_sink.hpp"
+#include <SushiLog/log/log_capture.hpp>
 #include "sample_front.hpp"
 
 namespace
@@ -56,12 +56,12 @@ namespace
 
 TEST(Small_LogRecordLine, LineHoldsTimeLevelCategoryThreadCallSiteAndMessage)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
 
     SAMPLE_LOG_WARN(K_MEMORY_LOG_CATEGORY, "share refused for {} MiB", 64);
 
-    ASSERT_EQ(recording.sink().lines().size(), 1u);
-    const SushiLogTests::RecordedLine line = recording.sink().lines()[0];
+    ASSERT_EQ(recording.records().size(), 1u);
+    const SushiLog::CapturedRecord line = recording.records()[0];
     const std::regex shape(R"(^\[\d\d:\d\d:\d\d\.\d{3}\] \[WARN\] \[linetest\.memory\] \[t\d+\] )"
                            R"(\[test_record_line\.cpp:\d+\] share refused for 64 MiB$)");
     EXPECT_TRUE(std::regex_match(line.text, shape)) << line.text;
@@ -73,25 +73,25 @@ TEST(Small_LogRecordLine, LineHoldsTimeLevelCategoryThreadCallSiteAndMessage)
 
 TEST(Small_LogRecordLine, TimeIsTheSystemClockOfTheCall)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
     const std::int64_t before = now_ns();
 
     SAMPLE_LOG_WARN(K_MEMORY_LOG_CATEGORY, "timed");
 
     const std::int64_t after = now_ns();
-    ASSERT_EQ(recording.sink().lines().size(), 1u);
-    EXPECT_GE(recording.sink().lines()[0].time_ns, before);
-    EXPECT_LE(recording.sink().lines()[0].time_ns, after);
+    ASSERT_EQ(recording.records().size(), 1u);
+    EXPECT_GE(recording.records()[0].time_ns, before);
+    EXPECT_LE(recording.records()[0].time_ns, after);
 }
 
 TEST(Small_LogRecordLine, ALineBreakInTheMessageBecomesASpaceInTheLine)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
 
     SAMPLE_LOG_WARN(K_MEMORY_LOG_CATEGORY, "first\nsecond\r\nthird");
 
-    ASSERT_EQ(recording.sink().lines().size(), 1u);
-    const std::string text = recording.sink().lines()[0].text;
+    ASSERT_EQ(recording.records().size(), 1u);
+    const std::string text = recording.records()[0].text;
     EXPECT_EQ(text.find('\n'), std::string::npos);
     EXPECT_EQ(text.find('\r'), std::string::npos);
     EXPECT_NE(text.find("first second  third"), std::string::npos);
@@ -99,18 +99,18 @@ TEST(Small_LogRecordLine, ALineBreakInTheMessageBecomesASpaceInTheLine)
 
 TEST(Small_LogRecordLine, OneThreadKeepsOneNumber)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
 
     SAMPLE_LOG_WARN(K_MEMORY_LOG_CATEGORY, "one");
     SAMPLE_LOG_WARN(K_MEMORY_LOG_CATEGORY, "two");
 
-    ASSERT_EQ(recording.sink().lines().size(), 2u);
-    EXPECT_EQ(recording.sink().lines()[0].thread, recording.sink().lines()[1].thread);
+    ASSERT_EQ(recording.records().size(), 2u);
+    EXPECT_EQ(recording.records()[0].thread, recording.records()[1].thread);
 }
 
 TEST(Medium_LogRecordLine, TwoThreadsGetTwoNumbers)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
 
     SAMPLE_LOG_WARN(K_MEMORY_LOG_CATEGORY, "main");
     std::thread other([]()
@@ -119,6 +119,6 @@ TEST(Medium_LogRecordLine, TwoThreadsGetTwoNumbers)
     });
     other.join();
 
-    ASSERT_EQ(recording.sink().lines().size(), 2u);
-    EXPECT_NE(recording.sink().lines()[0].thread, recording.sink().lines()[1].thread);
+    ASSERT_EQ(recording.records().size(), 2u);
+    EXPECT_NE(recording.records()[0].thread, recording.records()[1].thread);
 }

@@ -11,6 +11,7 @@ sushilog_add_module_tests(
         test_export.cpp
         test_log_abi.cpp
         test_log_c_sink.cpp
+        test_log_capture.cpp
         test_log_calls/test_environment.cpp
         test_log_calls/test_exit.cpp
         test_log_calls/test_fatal.cpp

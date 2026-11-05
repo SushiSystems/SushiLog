@@ -32,7 +32,7 @@
 
 #include <SushiLog/log/log_calls.hpp>
 
-#include "recording_sink.hpp"
+#include <SushiLog/log/log_capture.hpp>
 
 namespace
 {
@@ -64,7 +64,7 @@ TEST(Small_LogFront, CeilingIsErrorWhenLoggingIsOff)
 
 TEST(Small_LogFront, ACallPastTheCeilingEvaluatesNothing)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
     SushiLog::set_log_level(K_GATE_LOG_CATEGORY, SushiLog::LogLevel::Trace);
     g_evaluations = 0;
 
@@ -72,12 +72,12 @@ TEST(Small_LogFront, ACallPastTheCeilingEvaluatesNothing)
                     K_GATE_LOG_CATEGORY, "value {}", counted(1));
 
     EXPECT_EQ(g_evaluations, 0);
-    EXPECT_TRUE(recording.sink().lines().empty());
+    EXPECT_TRUE(recording.records().empty());
 }
 
 TEST(Small_LogFront, ACallBelowTheCategoryLevelEvaluatesNothing)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
     SushiLog::set_log_level(K_GATE_LOG_CATEGORY, SushiLog::LogLevel::Warn);
     g_evaluations = 0;
 
@@ -85,12 +85,12 @@ TEST(Small_LogFront, ACallBelowTheCategoryLevelEvaluatesNothing)
                     "value {}", counted(1));
 
     EXPECT_EQ(g_evaluations, 0);
-    EXPECT_TRUE(recording.sink().lines().empty());
+    EXPECT_TRUE(recording.records().empty());
 }
 
 TEST(Small_LogFront, ACallPastBothGatesIsDeliveredOnce)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
     SushiLog::set_log_level(K_GATE_LOG_CATEGORY, SushiLog::LogLevel::Warn);
     g_evaluations = 0;
 
@@ -98,7 +98,7 @@ TEST(Small_LogFront, ACallPastBothGatesIsDeliveredOnce)
                     "value {}", counted(4));
 
     EXPECT_EQ(g_evaluations, 1);
-    ASSERT_EQ(recording.sink().lines().size(), 1u);
-    EXPECT_EQ(recording.sink().lines()[0].message, "value 4");
-    EXPECT_EQ(recording.sink().lines()[0].level, SushiLog::LogLevel::Error);
+    ASSERT_EQ(recording.records().size(), 1u);
+    EXPECT_EQ(recording.records()[0].message, "value 4");
+    EXPECT_EQ(recording.records()[0].level, SushiLog::LogLevel::Error);
 }

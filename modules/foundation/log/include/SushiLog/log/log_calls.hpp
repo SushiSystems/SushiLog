@@ -69,11 +69,21 @@ namespace SushiLog
     SUSHILOG_API void set_log_sink(LogSink sink);
 
     /**
+     * @brief Replaces the sink of the process with @p sink, once no call into the old one runs,
+     *        and hands the old one back in @p sink.
+     * @return False, changing nothing on either side, when called from inside a sink.
+     */
+    [[nodiscard]] SUSHILOG_API bool exchange_log_sink(LogSink& sink);
+
+    /**
      * @brief Chooses whether a record reaches the sink before its log call returns.
      * @param synchronous True first waits for every queued record, then makes each log call
      *        deliver its own record; false hands records to the logger's thread.
      */
     SUSHILOG_API void set_log_synchronous(bool synchronous);
+
+    /** @brief Returns whether a record reaches the sink before its log call returns. */
+    [[nodiscard]] SUSHILOG_API bool log_synchronous();
 
     /**
      * @brief Returns a sink that enters another logger's records into this logger's queue.

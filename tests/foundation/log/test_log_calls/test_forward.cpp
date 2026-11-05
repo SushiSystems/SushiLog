@@ -32,7 +32,7 @@
 
 #include <gtest/gtest.h>
 
-#include "recording_sink.hpp"
+#include <SushiLog/log/log_capture.hpp>
 
 namespace
 {
@@ -51,25 +51,25 @@ namespace
 
 TEST(Small_LogForward, AForwardedRecordPassesNoLevelGate)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
     SushiLog::set_log_level(K_EDITOR_LOG_CATEGORY, SushiLog::LogLevel::Off);
     const SushiLog::LogSink forward = SushiLog::log_forward_sink();
 
     forward(foreign_record());
 
-    ASSERT_EQ(recording.sink().lines().size(), 1u);
-    EXPECT_EQ(recording.sink().lines()[0].level, SushiLog::LogLevel::Debug);
+    ASSERT_EQ(recording.records().size(), 1u);
+    EXPECT_EQ(recording.records()[0].level, SushiLog::LogLevel::Debug);
 }
 
 TEST(Small_LogForward, AForwardedRecordKeepsItsTimeAndCallSite)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
     const SushiLog::LogSink forward = SushiLog::log_forward_sink();
 
     forward(foreign_record());
 
-    ASSERT_EQ(recording.sink().lines().size(), 1u);
-    const SushiLogTests::RecordedLine line = recording.sink().lines()[0];
+    ASSERT_EQ(recording.records().size(), 1u);
+    const SushiLog::CapturedRecord line = recording.records()[0];
     EXPECT_EQ(line.time_ns, 987654321);
     EXPECT_EQ(line.file, "editor.cpp");
     EXPECT_EQ(line.line, 31u);
@@ -78,13 +78,13 @@ TEST(Small_LogForward, AForwardedRecordKeepsItsTimeAndCallSite)
 
 TEST(Small_LogForward, AForwardedRecordGetsThisLoggersThreadAndLine)
 {
-    const SushiLogTests::SynchronousRecording recording;
+    const SushiLog::LogCapture recording;
     const SushiLog::LogSink forward = SushiLog::log_forward_sink();
 
     forward(foreign_record());
 
-    ASSERT_EQ(recording.sink().lines().size(), 1u);
-    const SushiLogTests::RecordedLine line = recording.sink().lines()[0];
+    ASSERT_EQ(recording.records().size(), 1u);
+    const SushiLog::CapturedRecord line = recording.records()[0];
     EXPECT_NE(line.thread, 777u);
     EXPECT_EQ(line.text.find("a line written by the sender"), std::string::npos);
     EXPECT_NE(line.text.find("[DEBUG] [hosttest.editor]"), std::string::npos);

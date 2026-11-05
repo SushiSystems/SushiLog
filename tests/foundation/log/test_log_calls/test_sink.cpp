@@ -35,7 +35,7 @@
 
 #include <gtest/gtest.h>
 
-#include "recording_sink.hpp"
+#include <SushiLog/log/log_capture.hpp>
 #include "sample_front.hpp"
 
 namespace
@@ -61,7 +61,7 @@ TEST(Medium_LogSink, TheDefaultSinkWritesEachLineToStderr)
 TEST(Medium_LogSink, AnEmptySinkRestoresStderr)
 {
     SushiLog::set_log_synchronous(true);
-    SushiLogTests::RecordingSink recording;
+    SushiLog::LogRecorder recording;
     SushiLog::set_log_sink(recording.sink());
     SushiLog::set_log_sink(SushiLog::LogSink());
 
@@ -71,6 +71,23 @@ TEST(Medium_LogSink, AnEmptySinkRestoresStderr)
 
     EXPECT_EQ(recording.count_of("restored"), 0u);
     EXPECT_NE(err.find("restored"), std::string::npos);
+}
+
+TEST(Medium_LogSink, ExchangeHandsBackTheSinkItReplaced)
+{
+    SushiLog::set_log_synchronous(true);
+    SushiLog::LogRecorder first;
+    SushiLog::LogRecorder second;
+    SushiLog::set_log_sink(first.sink());
+    SushiLog::LogSink swapped = second.sink();
+
+    const bool exchanged = SushiLog::exchange_log_sink(swapped);
+    swapped(SushiLog::LogRecord{});
+    SushiLog::set_log_sink(SushiLog::LogSink());
+
+    EXPECT_TRUE(exchanged);
+    EXPECT_EQ(first.records().size(), 1u);
+    EXPECT_TRUE(second.records().empty());
 }
 
 TEST(Medium_LogSink, ASinkThatThrowsLosesNothing)
@@ -109,7 +126,7 @@ TEST(Medium_LogSink, AsynchronousDeliveryRunsOnTheLoggerThread)
 
 TEST(Medium_LogSink, EnteringSynchronousModeWaitsForTheQueueInOrder)
 {
-    SushiLogTests::RecordingSink recording;
+    SushiLog::LogRecorder recording;
     SushiLog::set_log_sink(recording.sink());
     SushiLog::set_log_synchronous(false);
 
@@ -117,7 +134,7 @@ TEST(Medium_LogSink, EnteringSynchronousModeWaitsForTheQueueInOrder)
         SAMPLE_LOG_WARN(K_OUTPUT_LOG_CATEGORY, "record {}", i);
     SushiLog::set_log_synchronous(true);
 
-    const std::vector<SushiLogTests::RecordedLine> lines = recording.lines();
+    const std::vector<SushiLog::CapturedRecord> lines = recording.records();
     SushiLog::set_log_sink(SushiLog::LogSink());
     ASSERT_EQ(lines.size(), 100u);
     for (int i = 0; i < 100; ++i)

@@ -99,9 +99,19 @@ namespace SushiLog
         static_cast<void>(Detail::logger().sink.replace(std::move(sink)));
     }
 
+    bool exchange_log_sink(LogSink& sink)
+    {
+        return Detail::logger().sink.exchange(sink);
+    }
+
     void set_log_synchronous(bool synchronous)
     {
         Detail::logger().writer.set_synchronous(synchronous);
+    }
+
+    bool log_synchronous()
+    {
+        return Detail::logger().writer.is_synchronous();
     }
 
     void log_at(LogLevel level, LogCategory category, const char* file, int line,
