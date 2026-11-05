@@ -11,7 +11,7 @@ writes each add. Nothing in a module job changes production code except a seam a
 
 | Job | Files | Waits on | Status |
 | --- | --- | --- | --- |
-| T1 | The scoped in-memory sink on the process-wide logger, public |  | todo |
+| T1 | The scoped in-memory sink on the process-wide logger, public |  | done |
 | T2 | `cli/sushilog/services/project.py`: root, config and environment passed in, with sushicore's in-memory runner and console | sushicore T1 | todo |
 | T3 | `tests/README.md` sizes aligned with the skill, and the header or code fix of decision 1 |  | todo |
 | T4 | `tools/testing/check_test_additions.py`, `tools/tests/test_check_test_additions.py` deleted |  | todo |
