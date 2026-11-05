@@ -1,0 +1,35 @@
+# Test review: plan
+
+**Status:** Open — not started; the owner chooses inline or parallel
+
+Applies the verdicts of `REPORT.md`, in hierarchy order: the shared helpers, adapters and seams the
+rewrites need come first, then the defects the review found, then each module's tests. A module job
+applies every record of its module: rewrite, resize, split, merge and delete as the record says, and
+writes each add. Nothing in a module job changes production code except a seam a job above built.
+
+## Jobs
+
+| Job | Files | Waits on | Status |
+| --- | --- | --- | --- |
+| T1 | The sink seam on the process-wide logger and its in-memory sink | owner decision 2 | todo |
+| T2 | `cli/sushilog/services/project.py`: root, config and environment passed in, with sushicore's in-memory runner and console | sushicore T1 | todo |
+| T3 | `tests/README.md` sizes aligned with the skill, and the header or code fix of decision 1 | owner decision 1 | todo |
+| T4 | `tools/testing/check_test_additions.py`, `tools/tests/test_check_test_additions.py` deleted |  | todo |
+| M1 | the tests of `cli` (6 files): 15 rewrite, 1 resize, 1 split, 2 delete | T1, T2, T3, T4 | todo |
+| M2 | the tests of `cli/services` (1 file): 21 rewrite | T1, T2, T3, T4 | todo |
+| M3 | the tests of `core` (2 files): 1 rewrite, 3 split | T1, T2, T3, T4 | todo |
+| M4 | the tests of `foundation` (20 files): 40 rewrite, 2 resize, 12 delete | T1, T2, T3, T4 | todo |
+| M5 | the tests of `package` (1 file): 2 rewrite | T1, T2, T3, T4 | todo |
+| M6 | the tests of `tools` (2 files): 1 rewrite, 2 resize, 1 split, 5 delete | T1, T2, T3, T4 | todo |
+
+## Acceptance
+
+- **T1.** A small test checks a log line through the in-memory sink with no process-wide state left behind. Build: the repository's test command.
+- **T2.** The project service's tests use no `monkeypatch` of the repository's own functions. Build: the CLI tests.
+- **T3.** The page says what the skill says; the WARN test and the header agree. Build: `python tools/check_all.py .`
+- **T4.** Neither file exists and the checkers pass. Build: `python tools/check_all.py .`
+- **M jobs.** Every record of the module is applied: no test the report deletes remains, every kept and
+  new test passes at the size its label states, and the module's tests pass through the project's own
+  test command. Build: that command over the module.
+
+The owner chooses inline or parallel mode.
