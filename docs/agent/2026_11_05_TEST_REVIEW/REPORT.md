@@ -42,6 +42,8 @@ The owner delegated these decisions on 2026-11-05. Each ruling below is final fo
 ## Dispatches
 
 dispatch: J15 review, 3 chunks — haiku high, 1 round each, passed, rung 1
+dispatch: J16 M4 test_log_calls — sonnet medium, 1 round, passed after one lead fix (a split string literal), rung 1
+dispatch: J16 M4 rest, M3, M5 — sonnet medium, 1 round, passed, rung 1
 
 ## Totals
 
