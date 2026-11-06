@@ -1,11 +1,4 @@
 [[finding]]
-checker = "testing/check_test_sizes.py"
-rule = "rule_unsized_python_test"
-path = "tools/tests/test_test_budget_settings.py"
-count = 1
-backlog = "RW-15"
-
-[[finding]]
 checker = "testing/check_test_mirror.py"
 rule = "rule_untested_unit"
 path = "modules/foundation/log/include/SushiLog/log/log_category.hpp"

@@ -13,11 +13,11 @@
 | RW-10 | P2 | open | Log the exception in flight from a catch block | one call inside `catch (...)` logs the exception's type and message under a category, level and context |  |  | 2026-10-26 |
 | RW-11 | P2 | open | Let a program read the dropped-record count and the count per level | a program reads how many records were dropped and how many were made at each level since start |  |  | 2026-10-26 |
 | RW-12 | P2 | open | Set levels, register categories and log from Python | the C interface and a Python binding over it set and read a level, register a category and emit a record |  |  | 2026-10-26 |
-| RW-19 | P2 | decision | Rule on a public seam that parses a level variable's value without the environment | AnUnreadableValueIsReportedOnceAndLeavesWarn and the variable grammar tests run Small_ |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
-| RW-20 | P2 | decision | Rule on a public queue capacity so the full-queue test stops copying 4096 | test_queue.cpp names the capacity from a public header |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
-| RW-21 | P2 | decision | Rule on an injected clock for the record time | TimeIsTheSystemClockOfTheCall runs Small_ on a clock the test sets |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
-| RW-22 | P2 | decision | Rule on thread identities as values for the thread number | TwoThreadsGetTwoNumbers runs Small_ with no thread |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
-| RW-23 | P2 | decision | Rule on a negative-compile check for a Delegate callable past Capacity | A build check fails when a Delegate takes a callable larger than its Capacity |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
+| RW-19 | P2 | open | Rule on a public seam that parses a level variable's value without the environment | Ruled 2026-11-06: a pure public parse of a level value; grammar tests Small_, one medium test of the wiring |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
+| RW-20 | P2 | open | Rule on a public queue capacity so the full-queue test stops copying 4096 | Ruled 2026-11-06: the queue capacity is a public named constant that test_queue.cpp names |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
+| RW-21 | P2 | open | Rule on an injected clock for the record time | Ruled 2026-11-06: a clock port exchanged like the sink; the time test Small_ on a set clock, one medium default test |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
+| RW-22 | P2 | open | Rule on thread identities as values for the thread number | Ruled 2026-11-06: thread numbering is a generic brick tested Small_ on values; one medium two-thread test |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
+| RW-23 | P2 | open | Rule on a negative-compile check for a Delegate callable past Capacity | Ruled 2026-11-06: a constexpr fits trait constrains Delegate; a compile-only file asserts an oversized callable does not fit |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
 
 ## Known issues
 

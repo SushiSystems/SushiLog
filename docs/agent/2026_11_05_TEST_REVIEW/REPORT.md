@@ -38,6 +38,13 @@ The owner delegated these decisions on 2026-11-05. Each ruling below is final fo
 1. The unseen-project WARN: the header changes. Levels are often set from configuration before any logger of that project registers, so a warning there would fire on correct start-up. The test that asserts no WARN stays.
 2. SushiLog's seam is a scoped in-memory sink: a guard that swaps the process-wide logger's sink for one test and restores it on exit. Routing a logger through every call site in every repository would cost more than it returns, and small tests run one at a time in their process. The in-memory sink is public, and every repository's log captures move onto it.
 3. The size timeouts follow the testing skill: 1 s, 10 s and 120 s. The skill is the one home of these numbers; a measurement on the owner's machine changes the skill, not a repository.
+4. RW-17, ruled by the owner on 2026-11-06: `tools/tests/test_test_budget_settings.py` is deleted with `K_TEST_BUDGET` and its known finding. SushiSkills deleted the test in `a528a1d`, so the copy here is a leftover, like the T4 checker.
+5. RW-19 to RW-23, delegated by the owner to the orchestrator on 2026-11-06. Each seam keeps today's behaviour by default, so the change is a minor version.
+   - RW-19: the parse of a level variable's value becomes a pure public function on a string view, which the environment reader calls. The grammar tests and the unreadable-value test run small on it; one medium test keeps the environment wiring.
+   - RW-20: the queue capacity is a named constant in a public header, which `test_queue.cpp` names.
+   - RW-21: the record time comes from a clock port, the system clock by default, exchanged as the sink is. The time test runs small on a set clock; one medium test checks the default.
+   - RW-22: thread numbering is its own brick, generic over the identity type, tested small on plain values; one medium test keeps two real threads.
+   - RW-23: Delegate gains a public constexpr trait saying whether a callable fits its Capacity, and its constructor is constrained by it; a compile-only file asserts that an oversized callable does not fit.
 
 ## Dispatches
 
