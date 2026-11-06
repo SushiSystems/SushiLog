@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- 2026-11-06 — tools: Deleted the leftover budget-settings test and `K_TEST_BUDGET`, which SushiSkills had dropped (RW-17, `94dab1f`).
 - 2026-11-06 — cli: Handed the Typer context object to the project service as its workspace, so the command tests run the real service on a scratch checkout (`cli.py`).
 - 2026-11-06 — cli: Passed the root, configuration, console, runner and environment into the project service as a `Workspace`, so its tests replace no function of the repository (`project.py`).
 - 2026-11-06 — test: Set the size timeouts to 1, 10 and 120 seconds, as the testing skill gives, and stopped promising a WARN for an unseen project (`SushiLogTests.cmake`, `log_calls.hpp`).
