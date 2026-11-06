@@ -169,7 +169,7 @@ TEST(Medium_LogExit, CallsAreValidDuringStaticInitialisation)
 
 #ifdef _WIN32
 
-TEST(Medium_LogExit, AThreadEndedInsideTheSinkLosesTheQueue)
+TEST(Characterization_Medium_LogExit, AThreadEndedInsideTheSinkLosesTheQueue)
 {
     GTEST_FLAG_SET(death_test_style, "threadsafe");
 

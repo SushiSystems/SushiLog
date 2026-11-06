@@ -6,7 +6,8 @@
 # One function builds the test program of a module. The tests of a module sit in
 # tests/<tier>/<module>/, the mirror of its folder under modules/, and build one program there.
 #
-# A test's size is its GoogleTest suite-name prefix: Small_*, Medium_* and Large_*, registered
+# A test's size is its GoogleTest suite-name prefix: Small_*, Medium_* and Large_*, alone or after
+# Characterization_ (a pin before a refactor, with its backlog entry), registered
 # with the label small, medium or large and a timeout of 1, 10 or 120 seconds. A test named
 # in SL_QUARANTINED_TESTS keeps its size and gains the quarantined label.
 # `sl test --label <size>` runs one label.
@@ -36,7 +37,8 @@ if(NOT TARGET GTest::gtest)
     FetchContent_MakeAvailable(googletest)
 endif()
 
-# Registers the tests of <program> whose suite opens with each size prefix.
+# Registers the tests of <program> whose suite opens with each size prefix, alone or after
+# Characterization_, so Characterization_Medium_X is a medium test.
 function(sushilog_register_sized_tests program module)
     set(groups "Small_|small|1" "Medium_|medium|10" "Large_|large|120")
     foreach(group IN LISTS groups)
@@ -47,13 +49,13 @@ function(sushilog_register_sized_tests program module)
 
         set(quarantined "")
         foreach(name IN LISTS SL_QUARANTINED_TESTS)
-            if(name MATCHES "^${prefix}")
+            if(name MATCHES "^(Characterization_)?${prefix}")
                 list(APPEND quarantined "${name}")
             endif()
         endforeach()
         list(JOIN quarantined ":" quarantined_filter)
 
-        set(filter "${prefix}*")
+        set(filter "${prefix}*:Characterization_${prefix}*")
         if(quarantined_filter)
             string(APPEND filter "-${quarantined_filter}")
             gtest_discover_tests(${program}

@@ -16,5 +16,9 @@ A test's size is the prefix of its GoogleTest suite. The build refuses a suite w
 
 The sizes and timeouts are those of the `testing` skill in SushiSkills, the one home of these numbers.
 
+A suite that pins today's behaviour before a refactor opens with `Characterization_` before its
+size, `Characterization_Medium_LogExit`, and has a backlog entry that removes it; it takes the label
+and timeout of that size.
+
 `sl test --label small` runs one size; `sl test --package` also builds `tests/package/`, an
 out-of-tree consumer of the installed package.
