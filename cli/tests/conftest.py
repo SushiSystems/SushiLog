@@ -38,17 +38,22 @@ class RecordingRunner:
     """Records every command line it is handed and starts none of them."""
 
     def __init__(self) -> None:
-        """Starts with no command recorded."""
+        """Starts with no command recorded and no exit code scripted."""
         self.commands: list[list[str]] = []
+        self._codes: list[int] = []
+
+    def script(self, *codes: int) -> None:
+        """Queues the exit codes of the next commands, in order; past them each exits 0."""
+        self._codes.extend(codes)
 
     def resolve_exe(self, name: str, env: dict[str, str] | None = None) -> str:
         """Returns the name unchanged."""
         return name
 
     def run(self, cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> int:
-        """Records the command and reports success."""
+        """Records the command and returns the next scripted exit code, or 0."""
         self.commands.append([str(part) for part in cmd])
-        return 0
+        return self._codes.pop(0) if self._codes else 0
 
     def run_drained(self, cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> int:
         """Records the command and reports success."""
