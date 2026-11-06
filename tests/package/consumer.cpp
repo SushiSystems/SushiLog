@@ -23,7 +23,7 @@
 
 /**
  * @file consumer.cpp
- * @brief Logs through an installed SushiLog target and fails unless the record arrives whole.
+ * @brief Logs through an installed SushiLog target and exits nonzero unless the record arrives whole.
  * @author Mustafa Garip
  * @see tests/package/README.md
  */
@@ -48,14 +48,39 @@ namespace
     {
         g_c_message.assign(record->message, record->message_size);
     }
+
+    /** @brief Puts back the default sink and the delivery mode it found when it ends. */
+    class DeliveryGuard final
+    {
+        public:
+            DeliveryGuard() : was_synchronous_(SushiLog::log_synchronous())
+            {
+
+            }
+
+            DeliveryGuard(const DeliveryGuard&) = delete;
+            DeliveryGuard& operator=(const DeliveryGuard&) = delete;
+
+            ~DeliveryGuard()
+            {
+                sl_set_log_sink(nullptr, nullptr);
+                SushiLog::set_log_sink(SushiLog::LogSink());
+                SushiLog::set_log_synchronous(was_synchronous_);
+            }
+
+        private:
+            bool was_synchronous_;
+    };
 } // namespace
 
 /**
- * @brief Logs one record through the C++ sink and one through the C sink.
- * @return 0 when both arrived with their message, 1 otherwise.
+ * @brief Logs one record through the C++ sink and one through the C sink, and exits with the
+ *        status of a comparison of what arrived with what was sent.
+ * @return 0 when both messages arrived whole, 1 otherwise.
  */
 int main()
 {
+    const DeliveryGuard guard;
     std::string message;
     SushiLog::set_log_synchronous(true);
     SushiLog::set_log_sink(SushiLog::LogSink([&message](const SushiLog::LogRecord& record)
@@ -68,15 +93,10 @@ int main()
     sl_set_log_sink(&keep_message, nullptr);
     SL_LOG_FRONT_AT(SushiLog::log_level_ceiling(true), SushiLog::LogLevel::Error,
                     K_PACKAGE_LOG_CATEGORY, "through the C sink");
-    sl_set_log_sink(nullptr, nullptr);
 
     const std::string expected = std::string("through the ") + CONSUMER_TARGET + " target";
-    if (message != expected || g_c_message != "through the C sink")
-    {
-        std::fprintf(stderr, "consumer (%s): got '%s' and '%s'\n", CONSUMER_TARGET,
-                     message.c_str(), g_c_message.c_str());
-        return 1;
-    }
-    std::fprintf(stdout, "consumer (%s): both records arrived\n", CONSUMER_TARGET);
-    return 0;
+    const bool arrived = message == expected && g_c_message == "through the C sink";
+    std::fprintf(stdout, "consumer (%s): got '%s' and '%s'\n", CONSUMER_TARGET, message.c_str(),
+                 g_c_message.c_str());
+    return static_cast<int>(!arrived);
 }

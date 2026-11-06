@@ -54,13 +54,13 @@ if(WIN32)
         COMMAND_EXPAND_LISTS
         VERBATIM)
 endif()
-add_test(NAME Small_Package.LogsThroughTheSharedTarget COMMAND sushilog_consumer_shared)
-set_tests_properties(Small_Package.LogsThroughTheSharedTarget PROPERTIES
-    LABELS small TIMEOUT 60)
+add_test(NAME Medium_Package.LogsThroughTheSharedTarget COMMAND sushilog_consumer_shared)
+set_tests_properties(Medium_Package.LogsThroughTheSharedTarget PROPERTIES
+    LABELS medium TIMEOUT 10)
 
 add_executable(sushilog_consumer_static consumer.cpp)
 target_link_libraries(sushilog_consumer_static PRIVATE SushiLog::SushiLogStatic)
 target_compile_definitions(sushilog_consumer_static PRIVATE CONSUMER_TARGET="static")
-add_test(NAME Small_Package.LogsThroughTheStaticTarget COMMAND sushilog_consumer_static)
-set_tests_properties(Small_Package.LogsThroughTheStaticTarget PROPERTIES
-    LABELS small TIMEOUT 60)
+add_test(NAME Medium_Package.LogsThroughTheStaticTarget COMMAND sushilog_consumer_static)
+set_tests_properties(Medium_Package.LogsThroughTheStaticTarget PROPERTIES
+    LABELS medium TIMEOUT 10)
