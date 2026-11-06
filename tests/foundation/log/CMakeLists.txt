@@ -8,7 +8,11 @@ sushilog_add_module_tests(
     SOURCES
         compile_delegate.cpp
         compile_export.cpp
+        compile_log_category.cpp
         compile_log_front.cpp
+        compile_log_project.cpp
+        compile_log_record.cpp
+        compile_log_sink.cpp
         test_delegate.cpp
         test_level_setting.cpp
         test_log_abi.cpp
