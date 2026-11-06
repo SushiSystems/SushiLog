@@ -57,7 +57,7 @@ namespace
     };
 
     /// @brief The number of records the queue of the logger holds.
-    constexpr int K_CAPACITY = 4096;
+    constexpr int K_CAPACITY = static_cast<int>(SushiLog::K_LOG_QUEUE_CAPACITY);
 
     /// @brief The number of records logged after the queue is full.
     constexpr int K_OVERFLOW = 10;
@@ -118,8 +118,9 @@ TEST(Medium_LogQueue, AFullQueueDropsCountsAndReportsBeforeTheNextRecord)
 
     ASSERT_EQ(gate.seen.size(), static_cast<std::size_t>(K_CAPACITY) + 2u);
     EXPECT_EQ(gate.seen[0], "first");
-    EXPECT_EQ(gate.seen[1], "dropped 10 records: the log queue of 4096 was full; the records "
-                            "after them are delivered");
+    EXPECT_EQ(gate.seen[1], "dropped 10 records: the log queue of " +
+                                std::to_string(SushiLog::K_LOG_QUEUE_CAPACITY) +
+                                " was full; the records after them are delivered");
     EXPECT_EQ(gate.seen[2], "flood 0");
     EXPECT_EQ(gate.seen.back(), "flood " + std::to_string(K_CAPACITY - 1));
 }

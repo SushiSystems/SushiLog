@@ -36,6 +36,7 @@
 #include <SushiLog/log/log_project.hpp>
 #include <SushiLog/log/log_sink.hpp>
 
+#include <cstddef>
 #include <string_view>
 
 namespace SushiLog
@@ -87,6 +88,12 @@ namespace SushiLog
 
     /** @brief Returns whether a record reaches the sink before its log call returns. */
     [[nodiscard]] SUSHILOG_API bool log_synchronous();
+
+    /**
+     * @brief Holds how many records wait for the logger's thread before one is dropped; the
+     *        next record delivered after a drop is preceded by a WARN that counts them.
+     */
+    inline constexpr std::size_t K_LOG_QUEUE_CAPACITY = 4096;
 
     /**
      * @brief Returns a sink that enters another logger's records into this logger's queue.

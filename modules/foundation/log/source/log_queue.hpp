@@ -33,13 +33,12 @@
 #include <cstddef>
 #include <deque>
 
+#include <SushiLog/log/log_calls.hpp>
+
 #include "record_format.hpp"
 
 namespace SushiLog::Detail
 {
-    /** @brief Holds how many records wait for the log thread before one is dropped. */
-    inline constexpr std::size_t K_LOG_QUEUE_CAPACITY = 4096;
-
     /**
      * @brief Holds the records waiting for the log thread, oldest first, up to a capacity.
      *
