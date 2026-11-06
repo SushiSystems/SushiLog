@@ -17,7 +17,6 @@
 | RW-20 | P2 | open | Rule on a public queue capacity so the full-queue test stops copying 4096 | Ruled 2026-11-06: the queue capacity is a public named constant that test_queue.cpp names |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
 | RW-21 | P2 | open | Rule on an injected clock for the record time | Ruled 2026-11-06: a clock port exchanged like the sink; the time test Small_ on a set clock, one medium default test |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
 | RW-22 | P2 | open | Rule on thread identities as values for the thread number | Ruled 2026-11-06: thread numbering is a generic brick tested Small_ on values; one medium two-thread test |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
-| RW-23 | P2 | open | Rule on a negative-compile check for a Delegate callable past Capacity | Ruled 2026-11-06: a constexpr fits trait constrains Delegate; a compile-only file asserts an oversized callable does not fit |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
 
 ## Known issues
 
