@@ -43,14 +43,15 @@ namespace SushiLog
     /**
      * @brief Sets every category of @p project except those set one by one.
      *
-     * For a project none of whose categories this logger has seen, it changes nothing and
-     * writes one WARN naming the project.
+     * For a project none of whose categories this logger has seen yet, the level is kept and
+     * applies to each category of it that registers later. Nothing is written.
      */
     SUSHILOG_API void set_log_level(LogProject project, LogLevel level) noexcept;
 
     /**
      * @brief Returns the level of the categories of @p project that no module setting overrides.
-     * @return Warn, with one WARN written, for a project this logger has not seen.
+     * @return The project's level; Warn, with nothing written, for a project this logger has
+     *         not seen.
      */
     [[nodiscard]] SUSHILOG_API LogLevel log_level(LogProject project) noexcept;
 

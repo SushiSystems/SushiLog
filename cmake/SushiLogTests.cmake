@@ -7,7 +7,7 @@
 # tests/<tier>/<module>/, the mirror of its folder under modules/, and build one program there.
 #
 # A test's size is its GoogleTest suite-name prefix: Small_*, Medium_* and Large_*, registered
-# with the label small, medium or large and a timeout of 60, 300 or 900 seconds. A test named
+# with the label small, medium or large and a timeout of 1, 10 or 120 seconds. A test named
 # in SL_QUARANTINED_TESTS keeps its size and gains the quarantined label.
 # `sl test --label <size>` runs one label.
 
@@ -38,7 +38,7 @@ endif()
 
 # Registers the tests of <program> whose suite opens with each size prefix.
 function(sushilog_register_sized_tests program module)
-    set(groups "Small_|small|60" "Medium_|medium|300" "Large_|large|900")
+    set(groups "Small_|small|1" "Medium_|medium|10" "Large_|large|120")
     foreach(group IN LISTS groups)
         string(REPLACE "|" ";" parts "${group}")
         list(GET parts 0 prefix)

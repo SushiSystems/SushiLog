@@ -10,9 +10,11 @@ A test's size is the prefix of its GoogleTest suite. The build refuses a suite w
 
 | Size | The test may use | Timeout |
 | --- | --- | --- |
-| `Small_` | One process and one thread; synchronous delivery, no stderr capture | 60 s |
-| `Medium_` | Threads, the logger's thread, stderr captured through a temporary file, death tests | 300 s |
-| `Large_` | Nothing in SushiLog needs it | 900 s |
+| `Small_` | The memory of its own process and one thread. The one process-wide instance it may reach is the logger, through a `LogCapture` (`SushiLog/log/log_capture.hpp`) that swaps the sink for the test and puts it back on exit. No environment variable, file, thread or real clock | 1 s |
+| `Medium_` | Threads, the logger's thread, stderr captured through a temporary file, death tests; whatever it sets, such as the delivery mode, it puts back | 10 s |
+| `Large_` | Nothing in SushiLog needs it | 120 s |
+
+The sizes and timeouts are those of the `testing` skill in SushiSkills, the one home of these numbers.
 
 `sl test --label small` runs one size; `sl test --package` also builds `tests/package/`, an
 out-of-tree consumer of the installed package.
