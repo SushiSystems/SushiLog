@@ -6,6 +6,7 @@
 sushilog_add_module_tests(
     MODULE log
     SOURCES
+        compile_delegate.cpp
         compile_export.cpp
         compile_log_front.cpp
         test_delegate.cpp

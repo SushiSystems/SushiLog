@@ -47,12 +47,25 @@ namespace SushiLog
     class Delegate;
 
     /**
+     * @brief Says whether a callable of type @p F fits a Delegate of @p Capacity bytes: no
+     *        larger than the storage, aligned no stricter than it, and nothrow-movable.
+     */
+    template <class F, std::size_t Capacity>
+    inline constexpr bool delegate_fits_v = sizeof(F) <= Capacity &&
+                                            alignof(F) <= alignof(std::max_align_t) &&
+                                            std::is_nothrow_move_constructible_v<F>;
+
+    /**
      * @brief Stores a move-only callable of signature R(Args...) in Capacity bytes.
      */
     template <class R, class... Args, std::size_t Capacity>
     class Delegate<R(Args...), Capacity> final
     {
         public:
+            /** @brief Says whether a callable of type @p F fits this Delegate's storage. */
+            template <class F>
+            static constexpr bool fits = delegate_fits_v<std::decay_t<F>, Capacity>;
+
             /** @brief Constructs an empty Delegate that holds no callable. */
             Delegate() noexcept = default;
 
@@ -64,22 +77,16 @@ namespace SushiLog
 
             /**
              * @brief Erases @p f into the inline storage without allocating.
-             * @tparam F A callable invocable as R(Args...) that fits the storage and has a
-             *         noexcept move constructor.
+             * @tparam F A callable invocable as R(Args...) for which fits is true; any other
+             *         type does not take part in overload resolution.
              */
             template <class F,
                       class DF = std::decay_t<F>,
                       std::enable_if_t<!std::is_same_v<DF, Delegate> &&
-                                       std::is_invocable_r_v<R, DF&, Args...>, int> = 0>
+                                       std::is_invocable_r_v<R, DF&, Args...> &&
+                                       delegate_fits_v<DF, Capacity>, int> = 0>
             Delegate(F&& f)
             {
-                static_assert(sizeof(DF) <= Capacity,
-                              "Delegate: the callable is larger than the inline storage; "
-                              "capture less or raise Capacity.");
-                static_assert(alignof(DF) <= alignof(Storage),
-                              "Delegate: the callable's alignment exceeds the storage's.");
-                static_assert(std::is_nothrow_move_constructible_v<DF>,
-                              "Delegate: the callable must be nothrow-move-constructible.");
                 ::new (static_cast<void*>(&storage_)) DF(std::forward<F>(f));
                 vtable_ = vtable_for<DF>();
             }
