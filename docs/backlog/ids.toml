@@ -1,6 +1,6 @@
 [work]
 next = 25
-closed = "8,13-14,17"
+closed = "8,13-14,16-17"
 
 [issue]
 next = 4
