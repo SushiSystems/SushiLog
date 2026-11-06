@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- 2026-11-06 — tools: Took the shared checkers that accept a compile check and a `Characterization_` size, and cleared every known finding (RW-15, RW-18, `29d7a40`).
+- 2026-11-06 — test: Registered `Characterization_<Size>_` suites at their size and moved the Windows exit pin to one (RW-24, `a843b1b`).
 - 2026-11-06 — log: Took the record time from `LogClock`, the system clock by default, with `exchange_log_clock` and `ScopedLogClock` (RW-21, `01f2938`).
 - 2026-11-06 — log: Numbered threads through `ThreadNumbers`, generic over the identity (RW-22, `01f2938`).
 - 2026-11-06 — log: Made `parse_level_setting` and `LevelSetting` public in `level_setting.hpp` (RW-19) (`f326cac`).
