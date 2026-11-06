@@ -15,8 +15,11 @@ from __future__ import annotations
 import enum
 import subprocess
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
+from typing import Any
 
 from sushicore import build_admission, build_report, cmake_cache
 from sushicore.build_tree import K_DEFAULT_BUILD_TYPE, refuse_another_build_type, tree_dir
@@ -69,8 +72,42 @@ K_CHECKERS = (
     Path("tools", "logs", "check_logging.py"),
 )
 
-_RUNNER = Runner(console, PROFILE.program)
-_DRIVER = CMakeDriver(console, _RUNNER)
+
+
+@dataclass(frozen=True)
+class Workspace:
+    """Holds what the project service acts on and acts through.
+
+    Attributes:
+        root: The checkout's root folder.
+        config: The resolved configuration.
+        console: Where the service prints.
+        runner: What starts cmake, ctest and the checkers.
+        environment: The environment cmake and ctest run under; ``None`` assembles it per tree
+            through ``sushilog.env.load_build_env``.
+    """
+
+    root: Path
+    config: Config
+    console: Any
+    runner: Any
+    environment: Mapping[str, str] | None = None
+
+    @cached_property
+    def driver(self) -> CMakeDriver:
+        """Returns the cmake and ctest driver over this workspace's console and runner."""
+        return CMakeDriver(self.console, self.runner)
+
+    def build_env(self, tree: Path) -> dict[str, str]:
+        """Returns the environment cmake and ctest run under for *tree*."""
+        if self.environment is not None:
+            return dict(self.environment)
+        return load_build_env(self.config, tree)
+
+
+def current_workspace() -> Workspace:
+    """Returns the workspace of the checkout `sl` runs in, with the real console and runner."""
+    return Workspace(find_project_root(), load_config(), console, Runner(console, PROFILE.program))
 
 
 def build_dir(root: Path, sanitizer: Sanitizer | None, build_type: BuildType,
@@ -99,8 +136,8 @@ def _compiler_arguments(cfg: Config) -> list[str]:
     return arguments
 
 
-def _needs_configure(cfg: Config, tree: Path, sanitizer: Sanitizer | None,
-                     lean: bool = False) -> bool:
+def _needs_configure(driver: CMakeDriver, cfg: Config, tree: Path,
+                     sanitizer: Sanitizer | None, lean: bool = False) -> bool:
     """Returns whether *tree* must be configured before it is compiled."""
     if not (tree / "CMakeCache.txt").is_file():
         return True
@@ -108,7 +145,7 @@ def _needs_configure(cfg: Config, tree: Path, sanitizer: Sanitizer | None,
               "SL_BUILD_TESTS": _on_off(not lean)}
     generator = cfg.resolved_generator()
     if generator:
-        return _DRIVER.needs_configure(tree, generator, expect=expect)
+        return driver.needs_configure(tree, generator, expect=expect)
     return any(cmake_cache.cached_value(tree, key) != value for key, value in expect.items())
 
 
@@ -120,7 +157,7 @@ def _on_off(value: bool) -> str:
 def build(build_type: BuildType = K_DEFAULT_TYPE, clean: bool = False,
           defines: Sequence[str] = (), sanitizer: Sanitizer | None = None,
           lean: bool = False, tree_path: str | None = None, jobs: int | None = None,
-          report: bool = False) -> int:
+          report: bool = False, workspace: Workspace | None = None) -> int:
     """Configures the tree of *sanitizer* and *build_type* when it needs it, then compiles it.
 
     Args:
@@ -133,23 +170,24 @@ def build(build_type: BuildType = K_DEFAULT_TYPE, clean: bool = False,
         tree_path: The tree to build in, below the project root, in place of the default one.
         jobs: Compile jobs; none uses the hardware threads, which the memory gate then admits.
         report: Prints and writes the build report after the compile.
+        workspace: The checkout to build; none builds the one `sl` runs in.
 
     Raises:
         ConfigError: The tree was configured as another build type, or *defines* names one.
         BuildStoppedError: The memory gate's stop file exists.
     """
-    root = find_project_root()
-    cfg = load_config()
+    space = workspace or current_workspace()
+    root, cfg, driver = space.root, space.config, space.driver
     tree = build_dir(root, sanitizer, build_type, tree_path)
     cmake_type = K_CMAKE_BUILD_TYPE[build_type]
     refuse_another_build_type(tree, cmake_type, defines)
     build_admission.refuse_a_stopped_gate(tree)
     if clean:
-        _DRIVER.clean_tree(tree)
-    env = load_build_env(cfg, tree)
+        driver.clean_tree(tree)
+    env = space.build_env(tree)
 
-    if defines or _needs_configure(cfg, tree, sanitizer, lean):
-        command = [_DRIVER.cmake(cfg), "-S", str(root), "-B", str(tree),
+    if defines or _needs_configure(driver, cfg, tree, sanitizer, lean):
+        command = [driver.cmake(cfg), "-S", str(root), "-B", str(tree),
                    f"-DCMAKE_BUILD_TYPE={cmake_type}",
                    f"-DSL_SANITIZE={sanitizer.value if sanitizer else ''}",
                    f"-DSL_BUILD_TESTS={_on_off(not lean)}",
@@ -158,25 +196,25 @@ def build(build_type: BuildType = K_DEFAULT_TYPE, clean: bool = False,
             tree, build_admission.compiler_cache(cfg.ccache_exe))
         for define in (*defines, *gate):
             command += ["-D", define]
-        rc = _DRIVER.configure(command, cwd=root, env=env)
+        rc = driver.configure(command, cwd=root, env=env)
         if rc != 0:
             return rc
 
     offset = build_report.ninja_log_offset(tree)
-    rc = _DRIVER.compile(cfg, tree, cwd=root, env=env, config=cmake_type,
+    rc = driver.compile(cfg, tree, cwd=root, env=env, config=cmake_type,
                          jobs=jobs or build_admission.hardware_threads())
     if report:
         summary = build_report.of_build(tree, offset, build_admission.state_dir(tree))
         for line in summary.lines():
-            console.info(line)
-        console.info(f"Report: {summary.write(tree)}")
+            space.console.info(line)
+        space.console.info(f"Report: {summary.write(tree)}")
     return rc
 
 
 def test(build_type: BuildType = K_DEFAULT_TYPE, sizes: Sequence[TestLabel] = (), clean: bool = False,
          filter: str | None = None, sanitizer: Sanitizer | None = None,
          jobs: int | None = None, package: bool = False, repeat: int = 0,
-         every_size: bool = False) -> int:
+         every_size: bool = False, workspace: Workspace | None = None) -> int:
     """Builds when needed, then runs the tests *sizes* and *filter* select through the shared test command.
 
     Args:
@@ -188,66 +226,71 @@ def test(build_type: BuildType = K_DEFAULT_TYPE, sizes: Sequence[TestLabel] = ()
             its two tests, one per library target.
         repeat: Reruns each test up to this many times, stopping at its first failure.
         every_size: Runs every size, the large tests included.
+        workspace: The checkout to test; none tests the one `sl` runs in.
     """
-    rc = build(build_type, clean=clean, sanitizer=sanitizer)
+    space = workspace or current_workspace()
+    rc = build(build_type, clean=clean, sanitizer=sanitizer, workspace=space)
     if rc != 0:
         return rc
 
-    root = find_project_root()
-    cfg = load_config()
+    root, cfg, driver = space.root, space.config, space.driver
     tree = build_dir(root, sanitizer, build_type)
     config = K_CMAKE_BUILD_TYPE[build_type]
-    env = load_build_env(cfg, tree)
+    env = space.build_env(tree)
     module = ModuleTests(
-        profile=PROFILE, project_root=lambda: root, console=lambda: console,
-        build_tree=lambda: tree, run=_RUNNER.run,
-        run_ctest=lambda directory, **options: _DRIVER.ctest_run(cfg, directory, env, config=config, **options))
+        profile=PROFILE, project_root=lambda: root, console=lambda: space.console,
+        build_tree=lambda: tree, run=space.runner.run,
+        run_ctest=lambda directory, **options: driver.ctest_run(cfg, directory, env, config=config, **options))
     selection = select_labels(sizes, every_size=every_size)
     rc = run_tests(module, selection, name_filter=filter, repeat=repeat, jobs=jobs, every_size=every_size)
     if rc != 0 or not package:
         return rc
-    return _test_package(root, cfg, tree, env, config)
+    return _test_package(space, tree, env, config)
 
 
-def _test_package(root: Path, cfg: Config, tree: Path, env: dict[str, str], config: str) -> int:
+def _test_package(space: Workspace, tree: Path, env: dict[str, str], config: str) -> int:
     """Installs *tree*, then builds and runs the consumer of tests/package/ against the install."""
+    root, cfg, driver = space.root, space.config, space.driver
     prefix = tree / "package-prefix"
     consumer = tree / "package"
-    console.header("Package consumer")
-    rc = _RUNNER.run([_DRIVER.cmake(cfg), "--install", str(tree), "--config", config,
+    space.console.header("Package consumer")
+    rc = space.runner.run([driver.cmake(cfg), "--install", str(tree), "--config", config,
                       "--prefix", str(prefix)], root, env)
     if rc != 0:
         return rc
-    rc = _DRIVER.configure([_DRIVER.cmake(cfg), "-S", str(root / K_PACKAGE_SOURCE),
+    rc = driver.configure([driver.cmake(cfg), "-S", str(root / K_PACKAGE_SOURCE),
                             "-B", str(consumer), f"-DCMAKE_BUILD_TYPE={config}",
                             f"-DCMAKE_PREFIX_PATH={prefix}", *_compiler_arguments(cfg)],
                            cwd=root, env=env)
     if rc != 0:
         return rc
-    rc = _DRIVER.compile(cfg, consumer, cwd=root, env=env, config=config)
+    rc = driver.compile(cfg, consumer, cwd=root, env=env, config=config)
     if rc != 0:
         return rc
-    return _DRIVER.ctest_run(cfg, consumer, env, config=config)
+    return driver.ctest_run(cfg, consumer, env, config=config)
 
 
-def check(report: bool = False, rule: str | None = None) -> int:
+def check(report: bool = False, rule: str | None = None,
+          workspace: Workspace | None = None) -> int:
     """Runs the shared checkers under tools/.
 
     Args:
         report: Makes each checker print counts per rule and exit zero.
         rule: The one rule to run; only the checkers whose --list-rules names it run.
+        workspace: The checkout to check; none checks the one `sl` runs in.
 
     Returns:
         The highest exit code among the checkers that ran, or 1 when no checker has *rule*.
     """
-    root = find_project_root()
+    space = workspace or current_workspace()
+    root = space.root
     checkers = [checker for checker in K_CHECKERS
                 if rule is None or rule in rules_of(root / checker)]
     if not checkers:
-        console.error(f"no checker under tools/ has the rule {rule}")
+        space.console.error(f"no checker under tools/ has the rule {rule}")
         return 1
     arguments = (["--report"] if report else []) + (["--rule", rule] if rule else [])
-    return max(_RUNNER.run([sys.executable, str(root / checker), str(root), *arguments], root)
+    return max(space.runner.run([sys.executable, str(root / checker), str(root), *arguments], root)
                for checker in checkers)
 
 

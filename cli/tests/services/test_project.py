@@ -39,7 +39,7 @@ def _value_after(command: list[str], flag: str) -> str:
 
 
 def test_build_configures_an_empty_tree_then_compiles(project):
-    assert project_service.build(BuildType.RELEASE) == 0
+    assert project_service.build(BuildType.RELEASE, workspace=project.workspace) == 0
 
     configure, compile_ = project.runner.commands
     assert _is_configure(configure) and _is_compile(compile_)
@@ -52,7 +52,7 @@ def test_build_configures_an_empty_tree_then_compiles(project):
 def test_build_leaves_a_configured_tree_alone(project):
     project.configure_tree("Debug")
 
-    assert project_service.build() == 0
+    assert project_service.build(workspace=project.workspace) == 0
 
     assert [_is_compile(command) for command in project.runner.commands] == [True]
 
@@ -60,14 +60,14 @@ def test_build_leaves_a_configured_tree_alone(project):
 def test_build_with_a_define_reconfigures(project):
     project.configure_tree("Debug")
 
-    assert project_service.build(defines=["FOO=1"]) == 0
+    assert project_service.build(defines=["FOO=1"], workspace=project.workspace) == 0
 
     configure = project.runner.commands[0]
     assert _is_configure(configure) and _value_after(configure, "-D") == "FOO=1"
 
 
 def test_build_with_a_sanitizer_uses_its_own_tree(project):
-    assert project_service.build(BuildType.DEBUG, sanitizer=Sanitizer.THREAD) == 0
+    assert project_service.build(BuildType.DEBUG, sanitizer=Sanitizer.THREAD, workspace=project.workspace) == 0
 
     configure = project.runner.commands[0]
     assert Path(_value_after(configure, "-B")).name == "tsan-debug"
@@ -78,7 +78,7 @@ def test_test_passes_the_sizes_the_jobs_and_the_filter_to_ctest(project):
     project.configure_tree("Debug")
 
     assert project_service.test(BuildType.DEBUG, (TestLabel.MEDIUM, TestLabel.SMALL), filter="Small_.*",
-                                jobs=4) == 0
+                                jobs=4, workspace=project.workspace) == 0
 
     ctest = project.runner.commands[-1]
     assert _value_after(ctest, "-L") == "^(small|medium)$"
@@ -92,17 +92,17 @@ def test_test_passes_the_sizes_the_jobs_and_the_filter_to_ctest(project):
 def test_test_without_a_size_runs_small_and_medium_and_refuses_an_unfiltered_large_run(project):
     project.configure_tree("Debug")
 
-    assert project_service.test() == 0
+    assert project_service.test(workspace=project.workspace) == 0
     assert _value_after(project.runner.commands[-1], "-L") == "^(small|medium)$"
 
-    assert project_service.test(sizes=(TestLabel.LARGE,)) == 2
+    assert project_service.test(sizes=(TestLabel.LARGE,), workspace=project.workspace) == 2
     assert _is_compile(project.runner.commands[-1])
 
 
 def test_test_with_package_installs_then_builds_and_runs_the_consumer(project):
     project.configure_tree("Debug")
 
-    assert project_service.test(package=True) == 0
+    assert project_service.test(package=True, workspace=project.workspace) == 0
 
     install, configure, compile_, ctest = project.runner.commands[-4:]
     prefix = _value_after(install, "--prefix")
@@ -114,28 +114,31 @@ def test_test_with_package_installs_then_builds_and_runs_the_consumer(project):
 
 
 def test_check_runs_every_checker_with_the_root(project):
-    assert project_service.check() == 0
+    assert project_service.check(workspace=project.workspace) == 0
 
     assert len(project.runner.commands) == len(project_service.K_CHECKERS)
     assert all(command[0] == sys.executable and command[2] == str(project.root)
                for command in project.runner.commands)
 
 
-def test_check_with_a_rule_runs_only_the_checkers_that_list_it(project, monkeypatch):
-    monkeypatch.setattr(project_service, "rules_of",
-                        lambda checker: frozenset({"rule_x"}) if "logs" in checker.parts
-                        else frozenset())
+def _plant_checker(root: Path, checker: Path, rules: str) -> None:
+    """Writes a checker at *checker* below *root* that lists *rules* for --list-rules."""
+    path = root / checker
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"print({rules!r})\n", encoding="utf-8")
 
-    assert project_service.check(rule="rule_x") == 0
+
+def test_check_with_a_rule_runs_only_the_checkers_that_list_it(project):
+    _plant_checker(project.root, Path("tools", "logs", "check_logging.py"), "rule_x")
+
+    assert project_service.check(rule="rule_x", workspace=project.workspace) == 0
 
     (command,) = project.runner.commands
     assert command[1].endswith("check_logging.py") and command[-2:] == ["--rule", "rule_x"]
 
 
-def test_check_with_an_unknown_rule_fails_and_says_so(project, monkeypatch):
-    monkeypatch.setattr(project_service, "rules_of", lambda checker: frozenset())
-
-    assert project_service.check(rule="rule_none") == 1
+def test_check_with_an_unknown_rule_fails_and_says_so(project):
+    assert project_service.check(rule="rule_none", workspace=project.workspace) == 1
 
     assert project.console.of("error") == ["no checker under tools/ has the rule rule_none"]
 
@@ -152,7 +155,7 @@ def test_rules_of_reads_the_list_rules_flag(tmp_path):
 def test_the_default_build_type_is_debug(project):
     assert project_service.K_DEFAULT_TYPE is BuildType.DEBUG
 
-    assert project_service.build() == 0
+    assert project_service.build(workspace=project.workspace) == 0
 
     configure = project.runner.commands[0]
     assert "-DCMAKE_BUILD_TYPE=Debug" in configure
@@ -185,14 +188,14 @@ def test_a_tree_of_another_type_is_not_configured(project):
                      encoding="utf-8")
 
     with pytest.raises(ConfigError, match="Release tree"):
-        project_service.build(BuildType.DEBUG)
+        project_service.build(BuildType.DEBUG, workspace=project.workspace)
 
     assert project.runner.commands == []
 
 
 def test_a_define_naming_the_build_type_is_refused(project):
     with pytest.raises(ConfigError, match="CMAKE_BUILD_TYPE"):
-        project_service.build(defines=["CMAKE_BUILD_TYPE=Release"])
+        project_service.build(defines=["CMAKE_BUILD_TYPE=Release"], workspace=project.workspace)
 
 
 def test_a_stopped_gate_refuses_the_build(project):
@@ -201,13 +204,13 @@ def test_a_stopped_gate_refuses_the_build(project):
     stop.write_text("", encoding="utf-8")
 
     with pytest.raises(build_admission.BuildStoppedError):
-        project_service.build()
+        project_service.build(workspace=project.workspace)
 
     assert project.runner.commands == []
 
 
 def test_a_configure_carries_both_gate_launchers(project):
-    assert project_service.build() == 0
+    assert project_service.build(workspace=project.workspace) == 0
 
     configure = project.runner.commands[0]
     gate = build_admission.launcher_defines(project.tree)
@@ -221,7 +224,7 @@ def test_a_configure_carries_both_gate_launchers(project):
 def test_a_compile_gets_the_hardware_threads_without_jobs(project):
     project.configure_tree("Debug")
 
-    assert project_service.build() == 0
+    assert project_service.build(workspace=project.workspace) == 0
 
     compile_ = project.runner.commands[0]
     assert _value_after(compile_, "--parallel") == str(build_admission.hardware_threads())
@@ -230,7 +233,7 @@ def test_a_compile_gets_the_hardware_threads_without_jobs(project):
 def test_a_compile_gets_the_jobs_the_user_gave(project):
     project.configure_tree("Debug")
 
-    assert project_service.build(jobs=3) == 0
+    assert project_service.build(jobs=3, workspace=project.workspace) == 0
 
     assert _value_after(project.runner.commands[0], "--parallel") == "3"
 
@@ -238,7 +241,7 @@ def test_a_compile_gets_the_jobs_the_user_gave(project):
 def test_a_report_prints_after_the_compile(project):
     project.configure_tree("Debug")
 
-    assert project_service.build(report=True) == 0
+    assert project_service.build(report=True, workspace=project.workspace) == 0
 
     assert project.console.of("info")[-1].startswith("Report: ")
     assert (project.tree / "build_report.json").is_file()

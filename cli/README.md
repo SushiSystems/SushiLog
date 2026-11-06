@@ -46,3 +46,6 @@ unless `--jobs` says otherwise; `--report` prints the time and memory peak per k
 Another path is `--build-dir`. `sl test` leaves the quarantined tests out. `sl test --package`
 installs the tree, builds `tests/package/` against the install and runs its two tests. `sl check`
 runs the nine shared checkers and, with `--rule`, only those whose `--list-rules` names the rule.
+Each of `build`, `test` and `check` takes a `Workspace`: the root, the configuration, the console,
+the command runner and, when given, the environment cmake and ctest run under. `sl` passes the
+checkout it runs in; a test passes a scratch checkout and a runner that starts nothing.

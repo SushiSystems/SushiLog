@@ -43,7 +43,8 @@ def test_the_build_command_forwards_the_tree_and_lean(monkeypatch):
 
 
 def test_a_lean_build_configures_the_named_tree_without_tests(project):
-    assert project_service.build(BuildType.RELEASE, lean=True, tree_path="build/pkg-x") == 0
+    assert project_service.build(BuildType.RELEASE, lean=True, tree_path="build/pkg-x",
+                                 workspace=project.workspace) == 0
 
     configure = project.runner.commands[0]
     assert Path(_value_after(configure, "-B")) == project.root / "build" / "pkg-x"
@@ -51,7 +52,7 @@ def test_a_lean_build_configures_the_named_tree_without_tests(project):
 
 
 def test_a_default_build_asks_for_the_tests(project):
-    assert project_service.build(BuildType.RELEASE) == 0
+    assert project_service.build(BuildType.RELEASE, workspace=project.workspace) == 0
 
     assert "-DSL_BUILD_TESTS=ON" in project.runner.commands[0]
 
@@ -59,7 +60,7 @@ def test_a_default_build_asks_for_the_tests(project):
 def test_a_lean_build_reconfigures_a_tree_that_has_tests(project):
     project.configure_tree("Release", tests="ON")
 
-    assert project_service.build(BuildType.RELEASE, lean=True) == 0
+    assert project_service.build(BuildType.RELEASE, lean=True, workspace=project.workspace) == 0
 
     assert "-S" in project.runner.commands[0]
 

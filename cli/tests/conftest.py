@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import pytest
 from sushicore.build_tree import tree_dir
@@ -77,6 +78,7 @@ class Project:
     root: Path
     runner: RecordingRunner
     console: RecordingConsole
+    workspace: Any
     tree: Path = field(init=False)
 
     def __post_init__(self) -> None:
@@ -101,20 +103,13 @@ class Project:
 
 
 @pytest.fixture
-def project(tmp_path, monkeypatch) -> Project:
-    """Returns a scratch checkout whose project service records argv and starts nothing."""
-    from sushicore.cmake_driver import CMakeDriver
-
+def project(tmp_path) -> Project:
+    """Returns a scratch checkout whose workspace records argv and starts nothing."""
     from sushilog.config import Config
-    from sushilog.services import project as project_service
+    from sushilog.services.project import Workspace
 
     (tmp_path / "CMakeLists.txt").write_text("project(x)\n", encoding="utf-8")
     runner, console = RecordingRunner(), RecordingConsole()
     cfg = Config(cxx="clang++", generator="Ninja", ninja_exe="ninja")
-    monkeypatch.setattr(project_service, "find_project_root", lambda: tmp_path)
-    monkeypatch.setattr(project_service, "load_config", lambda: cfg)
-    monkeypatch.setattr(project_service, "load_build_env", lambda cfg, tree: {})
-    monkeypatch.setattr(project_service, "console", console)
-    monkeypatch.setattr(project_service, "_RUNNER", runner)
-    monkeypatch.setattr(project_service, "_DRIVER", CMakeDriver(console, runner))
-    return Project(tmp_path, runner, console)
+    workspace = Workspace(tmp_path, cfg, console, runner, environment={})
+    return Project(tmp_path, runner, console, workspace)
