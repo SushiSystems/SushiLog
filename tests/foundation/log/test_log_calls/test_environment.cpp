@@ -39,43 +39,56 @@
 namespace
 {
     using SushiLog::LogLevel;
+    using SushiLogTests::ScopedEnvironmentVariable;
 } // namespace
 
-TEST(Small_LogEnvironment, AVariableSetsEveryModuleAndThenEachPair)
+TEST(Medium_LogEnvironment, AModuleLevelInAVariableSetsEveryModule)
 {
-    SushiLogTests::set_environment_variable("ENVPAIRS_LOG_LEVEL", "debug,autograd=trace");
-    constexpr SushiLog::LogProject project{"envpairs", "ENVPAIRS_LOG_LEVEL"};
+    const ScopedEnvironmentVariable variable("SUSHILOGTEST_ENVMODULE_LOG_LEVEL", "debug");
+    constexpr SushiLog::LogProject project{"envmodule", "SUSHILOGTEST_ENVMODULE_LOG_LEVEL"};
 
-    EXPECT_EQ(SushiLog::log_level(SushiLog::make_log_category(project, "autograd")),
-              LogLevel::Trace);
     EXPECT_EQ(SushiLog::log_level(SushiLog::make_log_category(project, "tensor")),
+              LogLevel::Debug);
+    EXPECT_EQ(SushiLog::log_level(SushiLog::make_log_category(project, "autograd")),
               LogLevel::Debug);
 }
 
-TEST(Small_LogEnvironment, AVariableIsReadInAnyCaseAndWithSpaces)
+TEST(Medium_LogEnvironment, AModulePairInAVariableSetsThatModuleOverTheList)
 {
-    SushiLogTests::set_environment_variable("ENVCASE_LOG_LEVEL", " OFF , Graph = Error ");
-    constexpr SushiLog::LogProject project{"envcase", "ENVCASE_LOG_LEVEL"};
+    const ScopedEnvironmentVariable variable("SUSHILOGTEST_ENVPAIR_LOG_LEVEL",
+                                             "debug,autograd=trace");
+    constexpr SushiLog::LogProject project{"envpair", "SUSHILOGTEST_ENVPAIR_LOG_LEVEL"};
+
+    EXPECT_EQ(SushiLog::log_level(SushiLog::make_log_category(project, "autograd")),
+              LogLevel::Trace);
+}
+
+TEST(Medium_LogEnvironment, AVariableIsReadInAnyCaseAndWithSpaces)
+{
+    const ScopedEnvironmentVariable variable("SUSHILOGTEST_ENVCASE_LOG_LEVEL",
+                                             " OFF , Graph = Error ");
+    constexpr SushiLog::LogProject project{"envcase", "SUSHILOGTEST_ENVCASE_LOG_LEVEL"};
 
     EXPECT_EQ(SushiLog::log_level(SushiLog::make_log_category(project, "graph")),
               LogLevel::Error);
     EXPECT_EQ(SushiLog::log_level(SushiLog::make_log_category(project, "other")), LogLevel::Off);
 }
 
-TEST(Small_LogEnvironment, AVariableTouchesNoOtherProject)
+TEST(Medium_LogEnvironment, AVariableTouchesNoOtherProject)
 {
-    SushiLogTests::set_environment_variable("ENVMINE_LOG_LEVEL", "off");
-    constexpr SushiLog::LogProject mine{"envmine", "ENVMINE_LOG_LEVEL"};
-    constexpr SushiLog::LogProject theirs{"envtheirs", "ENVTHEIRS_LOG_LEVEL"};
+    const ScopedEnvironmentVariable mine_variable("SUSHILOGTEST_ENVMINE_LOG_LEVEL", "off");
+    const ScopedEnvironmentVariable theirs_variable("SUSHILOGTEST_ENVTHEIRS_LOG_LEVEL", "trace");
+    constexpr SushiLog::LogProject mine{"envmine", "SUSHILOGTEST_ENVMINE_LOG_LEVEL"};
+    constexpr SushiLog::LogProject theirs{"envtheirs", "SUSHILOGTEST_ENVTHEIRS_LOG_LEVEL"};
 
     EXPECT_EQ(SushiLog::log_level(SushiLog::make_log_category(mine, "a")), LogLevel::Off);
-    EXPECT_EQ(SushiLog::log_level(SushiLog::make_log_category(theirs, "a")), LogLevel::Warn);
+    EXPECT_EQ(SushiLog::log_level(SushiLog::make_log_category(theirs, "a")), LogLevel::Trace);
 }
 
-TEST(Small_LogEnvironment, ACallBeforeTheFirstLogCallWinsOverTheVariable)
+TEST(Medium_LogEnvironment, AnExplicitLevelOverridesTheVariable)
 {
-    SushiLogTests::set_environment_variable("ENVFIRST_LOG_LEVEL", "trace");
-    constexpr SushiLog::LogProject project{"envfirst", "ENVFIRST_LOG_LEVEL"};
+    const ScopedEnvironmentVariable variable("SUSHILOGTEST_ENVFIRST_LOG_LEVEL", "trace");
+    constexpr SushiLog::LogProject project{"envfirst", "SUSHILOGTEST_ENVFIRST_LOG_LEVEL"};
     constexpr SushiLog::LogCategory category = SushiLog::make_log_category(project, "io");
 
     SushiLog::set_log_level(category, LogLevel::Error);
@@ -85,8 +98,8 @@ TEST(Small_LogEnvironment, ACallBeforeTheFirstLogCallWinsOverTheVariable)
 
 TEST(Medium_LogEnvironment, AnUnreadableValueIsReportedOnceAndLeavesWarn)
 {
-    SushiLogTests::set_environment_variable("ENVBAD_LOG_LEVEL", "loud,graph=");
-    constexpr SushiLog::LogProject project{"envbad", "ENVBAD_LOG_LEVEL"};
+    const ScopedEnvironmentVariable variable("SUSHILOGTEST_ENVBAD_LOG_LEVEL", "loud,graph=");
+    constexpr SushiLog::LogProject project{"envbad", "SUSHILOGTEST_ENVBAD_LOG_LEVEL"};
 
     testing::internal::CaptureStderr();
     const LogLevel first = SushiLog::log_level(SushiLog::make_log_category(project, "graph"));
@@ -95,7 +108,7 @@ TEST(Medium_LogEnvironment, AnUnreadableValueIsReportedOnceAndLeavesWarn)
 
     EXPECT_EQ(first, LogLevel::Warn);
     EXPECT_EQ(second, LogLevel::Warn);
-    const std::size_t at = err.find("ENVBAD_LOG_LEVEL='loud,graph='");
+    const std::size_t at = err.find("SUSHILOGTEST_ENVBAD_LOG_LEVEL='loud,graph='");
     ASSERT_NE(at, std::string::npos);
-    EXPECT_EQ(err.find("ENVBAD_LOG_LEVEL=", at + 1), std::string::npos);
+    EXPECT_EQ(err.find("SUSHILOGTEST_ENVBAD_LOG_LEVEL=", at + 1), std::string::npos);
 }

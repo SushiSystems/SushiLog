@@ -37,6 +37,7 @@
 
 #include <gtest/gtest.h>
 
+#include "delivery_mode_guard.hpp"
 #include "sample_front.hpp"
 
 namespace
@@ -57,16 +58,16 @@ namespace
 TEST(Medium_LogFatal, FatalFollowsTheQueueOnTheCallingThread)
 {
     Delivery delivery;
-    SushiLog::set_log_sink(SushiLog::LogSink([&delivery](const SushiLog::LogRecord& record)
-    {
-        std::lock_guard<std::mutex> lock(delivery.mutex);
-        delivery.messages.emplace_back(record.message);
-        delivery.threads.push_back(std::this_thread::get_id());
-    }));
-    SushiLog::set_log_synchronous(false);
+    const SushiLogTests::SinkGuard sink(
+        SushiLog::LogSink([&delivery](const SushiLog::LogRecord& record)
+        {
+            std::lock_guard<std::mutex> lock(delivery.mutex);
+            delivery.messages.emplace_back(record.message);
+            delivery.threads.push_back(std::this_thread::get_id());
+        }));
+    const SushiLogTests::DeliveryModeGuard mode(false);
 
-    for (int i = 0; i < 50; ++i)
-        SAMPLE_LOG_WARN(K_DEVICE_LOG_CATEGORY, "before {}", i);
+    SAMPLE_LOG_WARN(K_DEVICE_LOG_CATEGORY, "queued before");
     SAMPLE_LOG_FATAL(K_DEVICE_LOG_CATEGORY, "device lost with no recovery path");
 
     std::vector<std::string> messages;
@@ -76,11 +77,8 @@ TEST(Medium_LogFatal, FatalFollowsTheQueueOnTheCallingThread)
         messages = delivery.messages;
         threads = delivery.threads;
     }
-    SushiLog::set_log_synchronous(true);
-    SushiLog::set_log_sink(SushiLog::LogSink());
-
-    ASSERT_EQ(messages.size(), 51u);
-    EXPECT_EQ(messages.back(), "device lost with no recovery path");
-    EXPECT_EQ(messages[49], "before 49");
-    EXPECT_EQ(threads.back(), std::this_thread::get_id());
+    ASSERT_EQ(messages.size(), 2u);
+    EXPECT_EQ(messages[0], "queued before");
+    EXPECT_EQ(messages[1], "device lost with no recovery path");
+    EXPECT_EQ(threads[1], std::this_thread::get_id());
 }

@@ -162,7 +162,7 @@ namespace
 #endif
 } // namespace
 
-TEST(Small_LogExit, CallsAreValidDuringStaticInitialisation)
+TEST(Medium_LogExit, CallsAreValidDuringStaticInitialisation)
 {
     EXPECT_EQ(g_static_level, LogLevel::Info);
 }
@@ -175,12 +175,6 @@ TEST(Medium_LogExit, AThreadEndedInsideTheSinkLosesTheQueue)
 
     // Windows ends the logger's thread inside the closed gate before SushiLog's statics die.
     EXPECT_EXIT(exit_with_records_queued(false), testing::ExitedWithCode(0), "^$");
-}
-
-TEST(Medium_LogExit, ACallAfterTheLoggerStoppedIsDelivered)
-{
-    GTEST_SKIP() << "On Windows a program's static destructors run before those of the DLLs "
-                    "it loads, so no call of this program can follow the logger's shut-down.";
 }
 
 #else

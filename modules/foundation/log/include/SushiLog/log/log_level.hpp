@@ -31,6 +31,7 @@
 #pragma once
 
 #include <cstdint>
+#include <type_traits>
 
 /**
  * @brief Holds every name of SushiLog, the one logger of the Sushi libraries.
@@ -53,4 +54,7 @@ namespace SushiLog
         Fatal = 5, /**< The process cannot continue. */
         Off = 6    /**< A setting that passes nothing; never the level of a record. */
     };
+
+    static_assert(std::is_same_v<std::underlying_type_t<LogLevel>, std::uint8_t>,
+                  "LogLevel is one byte: the C interface carries it in a uint8_t.");
 } // namespace SushiLog

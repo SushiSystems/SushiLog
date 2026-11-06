@@ -30,8 +30,6 @@
 
 #include <SushiLog/log/log_calls.hpp>
 
-#include <string>
-
 #include <gtest/gtest.h>
 
 #include <SushiLog/log/log_capture.hpp>
@@ -41,52 +39,63 @@ namespace
 {
     using SushiLog::LogLevel;
 
-    constexpr SushiLog::LogProject K_LEVEL_PROJECT{"leveltest", "LEVELTEST_LOG_LEVEL"};
-    constexpr SushiLog::LogCategory K_GRAPH_LOG_CATEGORY =
-        SushiLog::make_log_category(K_LEVEL_PROJECT, "graph");
-    constexpr SushiLog::LogCategory K_DEVICE_LOG_CATEGORY =
-        SushiLog::make_log_category(K_LEVEL_PROJECT, "device");
+    constexpr SushiLog::LogProject K_SET_PROJECT{"levelset", "LEVELSET_LOG_LEVEL"};
+    constexpr SushiLog::LogCategory K_SET_GRAPH_LOG_CATEGORY =
+        SushiLog::make_log_category(K_SET_PROJECT, "graph");
+    constexpr SushiLog::LogCategory K_SET_DEVICE_LOG_CATEGORY =
+        SushiLog::make_log_category(K_SET_PROJECT, "device");
 
-    constexpr SushiLog::LogProject K_OTHER_PROJECT{"othertest", "OTHERTEST_LOG_LEVEL"};
+    constexpr SushiLog::LogProject K_PIN_PROJECT{"levelpin", "LEVELPIN_LOG_LEVEL"};
+    constexpr SushiLog::LogCategory K_PIN_GRAPH_LOG_CATEGORY =
+        SushiLog::make_log_category(K_PIN_PROJECT, "graph");
+    constexpr SushiLog::LogCategory K_PIN_DEVICE_LOG_CATEGORY =
+        SushiLog::make_log_category(K_PIN_PROJECT, "device");
+
+    constexpr SushiLog::LogProject K_MINE_PROJECT{"levelmine", "LEVELMINE_LOG_LEVEL"};
+    constexpr SushiLog::LogCategory K_MINE_LOG_CATEGORY =
+        SushiLog::make_log_category(K_MINE_PROJECT, "graph");
+    constexpr SushiLog::LogProject K_OTHER_PROJECT{"levelother", "LEVELOTHER_LOG_LEVEL"};
     constexpr SushiLog::LogCategory K_OTHER_LOG_CATEGORY =
         SushiLog::make_log_category(K_OTHER_PROJECT, "graph");
+
+    constexpr SushiLog::LogProject K_CALL_PROJECT{"levelcall", "LEVELCALL_LOG_LEVEL"};
+    constexpr SushiLog::LogCategory K_CALL_LOG_CATEGORY =
+        SushiLog::make_log_category(K_CALL_PROJECT, "graph");
+
+    constexpr SushiLog::LogProject K_AT_PROJECT{"levelat", "LEVELAT_LOG_LEVEL"};
+    constexpr SushiLog::LogCategory K_AT_LOG_CATEGORY =
+        SushiLog::make_log_category(K_AT_PROJECT, "graph");
 } // namespace
-
-TEST(Small_LogLevels, ACategoryNothingSetsIsAtWarn)
-{
-    constexpr SushiLog::LogProject project{"defaulttest", "DEFAULTTEST_LOG_LEVEL"};
-
-    EXPECT_EQ(SushiLog::log_level(SushiLog::make_log_category(project, "any")), LogLevel::Warn);
-    EXPECT_EQ(SushiLog::log_level(project), LogLevel::Warn);
-}
 
 TEST(Small_LogLevels, SettingAProjectSetsEveryCategoryOfIt)
 {
-    static_cast<void>(SushiLog::log_level(K_GRAPH_LOG_CATEGORY));
+    static_cast<void>(SushiLog::log_level(K_SET_GRAPH_LOG_CATEGORY));
+    static_cast<void>(SushiLog::log_level(K_SET_DEVICE_LOG_CATEGORY));
 
-    SushiLog::set_log_level(K_LEVEL_PROJECT, LogLevel::Debug);
+    SushiLog::set_log_level(K_SET_PROJECT, LogLevel::Debug);
 
-    EXPECT_EQ(SushiLog::log_level(K_LEVEL_PROJECT), LogLevel::Debug);
-    EXPECT_EQ(SushiLog::log_level(K_GRAPH_LOG_CATEGORY), LogLevel::Debug);
-    EXPECT_EQ(SushiLog::log_level(K_DEVICE_LOG_CATEGORY), LogLevel::Debug);
+    EXPECT_EQ(SushiLog::log_level(K_SET_PROJECT), LogLevel::Debug);
+    EXPECT_EQ(SushiLog::log_level(K_SET_GRAPH_LOG_CATEGORY), LogLevel::Debug);
+    EXPECT_EQ(SushiLog::log_level(K_SET_DEVICE_LOG_CATEGORY), LogLevel::Debug);
 }
 
 TEST(Small_LogLevels, ACategorySetAloneKeepsItsLevelWhenTheProjectIsSet)
 {
-    SushiLog::set_log_level(K_DEVICE_LOG_CATEGORY, LogLevel::Trace);
+    static_cast<void>(SushiLog::log_level(K_PIN_GRAPH_LOG_CATEGORY));
+    SushiLog::set_log_level(K_PIN_DEVICE_LOG_CATEGORY, LogLevel::Trace);
 
-    SushiLog::set_log_level(K_LEVEL_PROJECT, LogLevel::Error);
+    SushiLog::set_log_level(K_PIN_PROJECT, LogLevel::Error);
 
-    EXPECT_EQ(SushiLog::log_level(K_DEVICE_LOG_CATEGORY), LogLevel::Trace);
-    EXPECT_EQ(SushiLog::log_level(K_GRAPH_LOG_CATEGORY), LogLevel::Error);
+    EXPECT_EQ(SushiLog::log_level(K_PIN_DEVICE_LOG_CATEGORY), LogLevel::Trace);
+    EXPECT_EQ(SushiLog::log_level(K_PIN_GRAPH_LOG_CATEGORY), LogLevel::Error);
 }
 
 TEST(Small_LogLevels, SettingAProjectTouchesNoOtherProject)
 {
     static_cast<void>(SushiLog::log_level(K_OTHER_LOG_CATEGORY));
-    static_cast<void>(SushiLog::log_level(K_GRAPH_LOG_CATEGORY));
+    static_cast<void>(SushiLog::log_level(K_MINE_LOG_CATEGORY));
 
-    SushiLog::set_log_level(K_LEVEL_PROJECT, LogLevel::Off);
+    SushiLog::set_log_level(K_MINE_PROJECT, LogLevel::Off);
 
     EXPECT_EQ(SushiLog::log_level(K_OTHER_LOG_CATEGORY), LogLevel::Warn);
 }
@@ -115,11 +124,11 @@ TEST(Small_LogLevels, ReadingAnUnseenProjectGivesItsDefaultAndWritesNothing)
 TEST(Small_LogLevels, ALogCallPassesAtOrAboveItsCategoryLevel)
 {
     const SushiLog::LogCapture recording;
-    SushiLog::set_log_level(K_GRAPH_LOG_CATEGORY, LogLevel::Info);
+    SushiLog::set_log_level(K_CALL_LOG_CATEGORY, LogLevel::Info);
 
-    SAMPLE_LOG_DEBUG(K_GRAPH_LOG_CATEGORY, "below");
-    SAMPLE_LOG_INFO(K_GRAPH_LOG_CATEGORY, "at");
-    SAMPLE_LOG_ERROR(K_GRAPH_LOG_CATEGORY, "above");
+    SAMPLE_LOG_DEBUG(K_CALL_LOG_CATEGORY, "below");
+    SAMPLE_LOG_INFO(K_CALL_LOG_CATEGORY, "at");
+    SAMPLE_LOG_ERROR(K_CALL_LOG_CATEGORY, "above");
 
     EXPECT_EQ(recording.count_of("below"), 0u);
     EXPECT_EQ(recording.count_of("at"), 1u);
@@ -129,9 +138,9 @@ TEST(Small_LogLevels, ALogCallPassesAtOrAboveItsCategoryLevel)
 TEST(Small_LogLevels, LogAtWritesTheGivenCallSitePastEveryLevel)
 {
     const SushiLog::LogCapture recording;
-    SushiLog::set_log_level(K_GRAPH_LOG_CATEGORY, LogLevel::Off);
+    SushiLog::set_log_level(K_AT_LOG_CATEGORY, LogLevel::Off);
 
-    SushiLog::log_at(LogLevel::Error, K_GRAPH_LOG_CATEGORY, "failing.cpp", 42, "check failed");
+    SushiLog::log_at(LogLevel::Error, K_AT_LOG_CATEGORY, "failing.cpp", 42, "check failed");
 
     ASSERT_EQ(recording.records().size(), 1u);
     const SushiLog::CapturedRecord line = recording.records()[0];

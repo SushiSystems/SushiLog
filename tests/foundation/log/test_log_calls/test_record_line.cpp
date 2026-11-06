@@ -73,7 +73,7 @@ TEST(Small_LogRecordLine, LineHoldsTimeLevelCategoryThreadCallSiteAndMessage)
     EXPECT_EQ(line.module, "memory");
 }
 
-TEST(Small_LogRecordLine, TimeIsTheSystemClockOfTheCall)
+TEST(Medium_LogRecordLine, TimeIsTheSystemClockOfTheCall)
 {
     const SushiLog::LogCapture recording;
     const std::int64_t before = now_ns();

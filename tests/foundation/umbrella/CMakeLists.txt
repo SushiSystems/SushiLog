@@ -6,4 +6,4 @@
 sushilog_add_module_tests(
     MODULE umbrella
     SOURCES
-        test_SushiLog.cpp)
+        compile_SushiLog.cpp)

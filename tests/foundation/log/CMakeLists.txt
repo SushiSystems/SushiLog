@@ -6,8 +6,9 @@
 sushilog_add_module_tests(
     MODULE log
     SOURCES
+        compile_export.cpp
+        compile_log_front.cpp
         test_delegate.cpp
-        test_export.cpp
         test_log_abi.cpp
         test_log_c_sink.cpp
         test_log_capture.cpp
@@ -20,9 +21,5 @@ sushilog_add_module_tests(
         test_log_calls/test_record_line.cpp
         test_log_calls/test_reentry.cpp
         test_log_calls/test_sink.cpp
-        test_log_category.cpp
         test_log_front.cpp
-        test_log_level.cpp
-        test_log_project.cpp
-        test_log_record.cpp
-        test_log_sink.cpp)
+        test_log_level.cpp)

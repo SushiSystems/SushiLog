@@ -35,6 +35,7 @@
 #include <gtest/gtest.h>
 
 #include <SushiLog/log/log_capture.hpp>
+#include "delivery_mode_guard.hpp"
 #include "sample_front.hpp"
 
 namespace
@@ -47,17 +48,16 @@ namespace
 TEST(Medium_LogReentry, ARecordLoggedFromInsideTheSinkGoesToStderr)
 {
     int calls = 0;
-    SushiLog::set_log_synchronous(true);
-    SushiLog::set_log_sink(SushiLog::LogSink([&calls](const SushiLog::LogRecord&)
+    const SushiLogTests::SinkGuard sink(SushiLog::LogSink([&calls](const SushiLog::LogRecord&)
     {
         ++calls;
         SAMPLE_LOG_WARN(K_LOOP_LOG_CATEGORY, "from inside");
     }));
+    const SushiLogTests::DeliveryModeGuard mode(true);
 
     testing::internal::CaptureStderr();
     SAMPLE_LOG_WARN(K_LOOP_LOG_CATEGORY, "outside");
     const std::string err = testing::internal::GetCapturedStderr();
-    SushiLog::set_log_sink(SushiLog::LogSink());
 
     EXPECT_EQ(calls, 1);
     EXPECT_NE(err.find("a sink logged from inside its own call"), std::string::npos);
@@ -68,18 +68,18 @@ TEST(Medium_LogReentry, ASinkThatSetsTheSinkChangesNothing)
 {
     SushiLog::LogRecorder other;
     int calls = 0;
-    SushiLog::set_log_synchronous(true);
-    SushiLog::set_log_sink(SushiLog::LogSink([&calls, &other](const SushiLog::LogRecord&)
-    {
-        ++calls;
-        SushiLog::set_log_sink(other.sink());
-    }));
+    const SushiLogTests::SinkGuard sink(
+        SushiLog::LogSink([&calls, &other](const SushiLog::LogRecord&)
+        {
+            ++calls;
+            SushiLog::set_log_sink(other.sink());
+        }));
+    const SushiLogTests::DeliveryModeGuard mode(true);
 
     testing::internal::CaptureStderr();
     SAMPLE_LOG_WARN(K_LOOP_LOG_CATEGORY, "one");
     SAMPLE_LOG_WARN(K_LOOP_LOG_CATEGORY, "two");
     const std::string err = testing::internal::GetCapturedStderr();
-    SushiLog::set_log_sink(SushiLog::LogSink());
 
     EXPECT_EQ(calls, 2);
     EXPECT_TRUE(other.records().empty());
@@ -88,17 +88,17 @@ TEST(Medium_LogReentry, ASinkThatSetsTheSinkChangesNothing)
 
 TEST(Medium_LogReentry, ASinkThatSetsTheModeChangesNothing)
 {
-    SushiLog::set_log_synchronous(true);
-    SushiLog::set_log_sink(SushiLog::LogSink([](const SushiLog::LogRecord&)
+    const SushiLogTests::SinkGuard sink(SushiLog::LogSink([](const SushiLog::LogRecord&)
     {
         SushiLog::set_log_synchronous(false);
     }));
+    const SushiLogTests::DeliveryModeGuard mode(true);
 
     testing::internal::CaptureStderr();
     SAMPLE_LOG_WARN(K_LOOP_LOG_CATEGORY, "mode");
     const std::string err = testing::internal::GetCapturedStderr();
-    SushiLog::set_log_sink(SushiLog::LogSink());
 
     EXPECT_NE(err.find("a sink set the delivery mode from inside its own call"),
               std::string::npos);
+    EXPECT_TRUE(SushiLog::log_synchronous());
 }

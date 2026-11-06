@@ -37,6 +37,7 @@
 
 #include <gtest/gtest.h>
 
+#include "delivery_mode_guard.hpp"
 #include "sample_front.hpp"
 
 namespace
@@ -55,30 +56,21 @@ namespace
         std::vector<std::string> seen;    /**< The messages delivered, in order. */
     };
 
-    /** @brief The number of records the queue of the logger holds. */
+    /// @brief The number of records the queue of the logger holds.
     constexpr int K_CAPACITY = 4096;
-} // namespace
 
-TEST(Medium_LogQueue, AFullQueueDropsCountsAndReportsBeforeTheNextRecord)
-{
-    Gate gate;
-    SushiLog::set_log_sink(SushiLog::LogSink([&gate](const SushiLog::LogRecord& record)
+    /// @brief The number of records logged after the queue is full.
+    constexpr int K_OVERFLOW = 10;
+
+    /** @brief Logs K_CAPACITY + K_OVERFLOW numbered records, "flood 0" on. */
+    void fill_the_queue_past_capacity()
     {
-        std::unique_lock<std::mutex> lock(gate.mutex);
-        gate.seen.emplace_back(record.message);
-        if (!gate.entered)
-        {
-            gate.entered = true;
-            gate.changed.notify_all();
-            gate.changed.wait(lock, [&gate]()
-            {
-                return gate.released;
-            });
-        }
-    }));
-    SushiLog::set_log_synchronous(false);
+        for (int i = 0; i < K_CAPACITY + K_OVERFLOW; ++i)
+            SAMPLE_LOG_WARN(K_FLOOD_LOG_CATEGORY, "flood {}", i);
+    }
 
-    SAMPLE_LOG_WARN(K_FLOOD_LOG_CATEGORY, "first");
+    /** @brief Waits until the sink of @p gate holds its first record. */
+    void wait_until_the_sink_holds_a_record(Gate& gate)
     {
         std::unique_lock<std::mutex> lock(gate.mutex);
         gate.changed.wait(lock, [&gate]()
@@ -86,15 +78,43 @@ TEST(Medium_LogQueue, AFullQueueDropsCountsAndReportsBeforeTheNextRecord)
             return gate.entered;
         });
     }
-    for (int i = 0; i < K_CAPACITY + 10; ++i)
-        SAMPLE_LOG_WARN(K_FLOOD_LOG_CATEGORY, "flood {}", i);
+
+    /** @brief Lets the sink of @p gate go. */
+    void release_the_sink(Gate& gate)
     {
-        std::lock_guard<std::mutex> lock(gate.mutex);
-        gate.released = true;
+        {
+            std::lock_guard<std::mutex> lock(gate.mutex);
+            gate.released = true;
+        }
+        gate.changed.notify_all();
     }
-    gate.changed.notify_all();
+} // namespace
+
+TEST(Medium_LogQueue, AFullQueueDropsCountsAndReportsBeforeTheNextRecord)
+{
+    Gate gate;
+    const SushiLogTests::SinkGuard sink(
+        SushiLog::LogSink([&gate](const SushiLog::LogRecord& record)
+        {
+            std::unique_lock<std::mutex> lock(gate.mutex);
+            gate.seen.emplace_back(record.message);
+            if (!gate.entered)
+            {
+                gate.entered = true;
+                gate.changed.notify_all();
+                gate.changed.wait(lock, [&gate]()
+                {
+                    return gate.released;
+                });
+            }
+        }));
+    const SushiLogTests::DeliveryModeGuard mode(false);
+
+    SAMPLE_LOG_WARN(K_FLOOD_LOG_CATEGORY, "first");
+    wait_until_the_sink_holds_a_record(gate);
+    fill_the_queue_past_capacity();
+    release_the_sink(gate);
     SushiLog::set_log_synchronous(true);
-    SushiLog::set_log_sink(SushiLog::LogSink());
 
     ASSERT_EQ(gate.seen.size(), static_cast<std::size_t>(K_CAPACITY) + 2u);
     EXPECT_EQ(gate.seen[0], "first");

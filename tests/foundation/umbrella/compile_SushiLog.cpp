@@ -1,5 +1,5 @@
 /**************************************************************************/
-/* test_log_record.cpp                                                    */
+/* compile_SushiLog.cpp                                                   */
 /**************************************************************************/
 /*                          This file is part of:                         */
 /*                                SushiLog                                */
@@ -22,29 +22,44 @@
 /**************************************************************************/
 
 /**
- * @file test_log_record.cpp
- * @brief Tests that LogRecord holds every field a sink reads.
+ * @file compile_SushiLog.cpp
+ * @brief Checks at compile time that the umbrella header names the levels, the sink and the front, and leaves the C header out.
  * @author Mustafa Garip
- * @see tests/foundation/log/README.md
+ * @see tests/foundation/umbrella/README.md
  */
 
-#include <SushiLog/log/log_record.hpp>
+#include <SushiLog/SushiLog.hpp>
 
-#include <gtest/gtest.h>
+#include <cstddef>
+#include <cstdint>
+#include <type_traits>
 
-TEST(Small_LogRecord, HoldsEachFieldApart)
+/**
+ * @brief Holds a type of the C header's name; it compiles only while the umbrella leaves
+ *        log_c_sink.h out.
+ */
+struct SushiLogRecord
 {
-    const SushiLog::LogRecord record{SushiLog::LogLevel::Error, "sushisample", "graph",
-                                     "graph.cpp", 12, 3, 1700000000000000000, "failed",
-                                     "[..] failed"};
+    int declared_here; /**< A field the C header's struct does not have. */
+};
 
-    EXPECT_EQ(record.level, SushiLog::LogLevel::Error);
-    EXPECT_EQ(record.project, "sushisample");
-    EXPECT_EQ(record.module, "graph");
-    EXPECT_EQ(record.file, "graph.cpp");
-    EXPECT_EQ(record.line, 12u);
-    EXPECT_EQ(record.thread, 3u);
-    EXPECT_EQ(record.time_ns, 1700000000000000000);
-    EXPECT_EQ(record.message, "failed");
-    EXPECT_EQ(record.text, "[..] failed");
-}
+namespace
+{
+    constexpr SushiLog::LogProject K_UMBRELLA_PROJECT{"umbrellatest", "UMBRELLATEST_LOG_LEVEL"};
+    constexpr SushiLog::LogCategory K_USE_LOG_CATEGORY =
+        SushiLog::make_log_category(K_UMBRELLA_PROJECT, "use");
+
+    static_assert(std::is_enum_v<SushiLog::LogLevel>);
+    static_assert(std::is_class_v<SushiLog::LogRecord>);
+    static_assert(std::is_constructible_v<SushiLog::LogSink, std::nullptr_t>);
+    static_assert(std::is_invocable_v<decltype(&SushiLog::set_log_sink), SushiLog::LogSink>);
+    static_assert(std::is_same_v<std::remove_const_t<decltype(SushiLog::K_ABI_VERSION)>,
+                                 std::uint32_t>);
+
+    /** @brief Expands the front macro, so the compiler checks that the umbrella names all it needs. */
+    [[maybe_unused]] void log_through_the_front()
+    {
+        SL_LOG_FRONT_AT(SushiLog::log_level_ceiling(true), SushiLog::LogLevel::Error,
+                        K_USE_LOG_CATEGORY, "reached {}", 1);
+    }
+} // namespace

@@ -8,4 +8,6 @@ forwarding and process exit. `test_log_capture.cpp` tests `LogRecorder` and `Log
 | Helper | Does |
 | --- | --- |
 | `sample_front.hpp` | `SAMPLE_LOG_*`, a front as a Sushi project writes one, over `SL_LOG_FRONT_AT` |
-| `environment_variable.hpp` | `set_environment_variable`, for the level-variable tests |
+| `environment_variable.hpp` | `ScopedEnvironmentVariable`, which sets a level variable for one test and puts the old value back |
+| `delivery_mode_guard.hpp` | `SinkGuard` and `DeliveryModeGuard`, which put back the sink and the delivery mode a medium test found |
+| `compile_*.cpp` | Compile-time promises as `static_assert`s; the build compiles them and the runner lists nothing |

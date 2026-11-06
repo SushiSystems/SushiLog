@@ -1,5 +1,5 @@
 /**************************************************************************/
-/* test_log_sink.cpp                                                      */
+/* compile_log_front.cpp                                                  */
 /**************************************************************************/
 /*                          This file is part of:                         */
 /*                                SushiLog                                */
@@ -22,36 +22,18 @@
 /**************************************************************************/
 
 /**
- * @file test_log_sink.cpp
- * @brief Tests LogSink, the callable type a sink is stored as.
+ * @file compile_log_front.cpp
+ * @brief Checks at compile time the values of log_level_ceiling.
  * @author Mustafa Garip
  * @see tests/foundation/log/README.md
  */
 
-#include <SushiLog/log/log_sink.hpp>
+#include <SushiLog/log/log_front.hpp>
 
-#include <string>
+static_assert(SushiLog::log_level_ceiling(false) == SushiLog::LogLevel::Error);
 
-#include <gtest/gtest.h>
-
-TEST(Small_LogSink, CallsItsCallableWithTheRecord)
-{
-    std::string seen;
-    const SushiLog::LogSink sink([&seen](const SushiLog::LogRecord& record)
-    {
-        seen = std::string(record.message);
-    });
-    const SushiLog::LogRecord record{SushiLog::LogLevel::Warn, "p", "m", "f.cpp", 1, 1, 0,
-                                     "hello", "line"};
-
-    sink(record);
-
-    EXPECT_EQ(seen, "hello");
-}
-
-TEST(Small_LogSink, AnEmptySinkIsFalse)
-{
-    const SushiLog::LogSink empty{};
-
-    EXPECT_FALSE(empty);
-}
+#ifdef NDEBUG
+static_assert(SushiLog::log_level_ceiling(true) == SushiLog::LogLevel::Debug);
+#else
+static_assert(SushiLog::log_level_ceiling(true) == SushiLog::LogLevel::Trace);
+#endif

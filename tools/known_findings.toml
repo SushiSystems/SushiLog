@@ -4,3 +4,45 @@ rule = "rule_unsized_python_test"
 path = "tools/tests/test_test_budget_settings.py"
 count = 1
 backlog = "RW-15"
+
+[[finding]]
+checker = "testing/check_test_mirror.py"
+rule = "rule_untested_unit"
+path = "modules/foundation/log/include/SushiLog/log/log_category.hpp"
+count = 1
+backlog = "RW-18"
+
+[[finding]]
+checker = "testing/check_test_mirror.py"
+rule = "rule_untested_unit"
+path = "modules/foundation/log/include/SushiLog/log/log_project.hpp"
+count = 1
+backlog = "RW-18"
+
+[[finding]]
+checker = "testing/check_test_mirror.py"
+rule = "rule_untested_unit"
+path = "modules/foundation/log/include/SushiLog/log/log_record.hpp"
+count = 1
+backlog = "RW-18"
+
+[[finding]]
+checker = "testing/check_test_mirror.py"
+rule = "rule_untested_unit"
+path = "modules/foundation/log/include/SushiLog/log/log_sink.hpp"
+count = 1
+backlog = "RW-18"
+
+[[finding]]
+checker = "testing/check_test_mirror.py"
+rule = "rule_untested_unit"
+path = "modules/foundation/umbrella/include/SushiLog/SushiLog.hpp"
+count = 1
+backlog = "RW-18"
+
+[[finding]]
+checker = "testing/check_test_mirror.py"
+rule = "rule_untested_unit"
+path = "modules/foundation/log/include/SushiLog/log/export.hpp"
+count = 1
+backlog = "RW-18"

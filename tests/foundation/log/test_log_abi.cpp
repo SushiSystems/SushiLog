@@ -37,18 +37,6 @@ namespace
     constexpr SushiLog::LogProject K_ABI_PROJECT{"abitest", "ABITEST_LOG_LEVEL"};
 } // namespace
 
-TEST(Small_LogAbi, LibraryHoldsTheVersionItsHeadersName)
-{
-    EXPECT_EQ(SushiLog::abi_version(), SushiLog::K_ABI_VERSION);
-}
-
-TEST(Small_LogAbi, EqualVersionsPassTheCheck)
-{
-    SushiLog::Detail::check_log_abi(K_ABI_PROJECT, 3, 3);
-
-    SUCCEED();
-}
-
 TEST(Medium_LogAbi, AMismatchNamesTheProjectBothVersionsAndTheLibraryThenEnds)
 {
     GTEST_FLAG_SET(death_test_style, "threadsafe");

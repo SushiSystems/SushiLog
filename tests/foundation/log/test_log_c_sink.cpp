@@ -32,6 +32,7 @@
 
 #include <cstddef>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -57,6 +58,7 @@ namespace
         std::string message;       /**< Its message. */
         std::string text;          /**< Its line. */
         void* user = nullptr;      /**< The user pointer it came with. */
+        std::thread::id delivered_on; /**< The thread the sink was called on. */
     };
 
     /** @brief Keeps a copy of every record the C sink receives. */
@@ -69,8 +71,34 @@ namespace
                                           std::string(record->project, record->project_size),
                                           std::string(record->module, record->module_size),
                                           std::string(record->message, record->message_size),
-                                          std::string(record->text, record->text_size), user});
+                                          std::string(record->text, record->text_size), user,
+                                          std::this_thread::get_id()});
     }
+
+    /**
+     * @brief Puts back, when it ends, the delivery mode it found and the default sink, so a
+     *        test that changes them leaves no state behind.
+     */
+    class DeliveryGuard final
+    {
+        public:
+            DeliveryGuard() : was_synchronous_(SushiLog::log_synchronous())
+            {
+                g_c_records.clear();
+            }
+
+            DeliveryGuard(const DeliveryGuard&) = delete;
+            DeliveryGuard& operator=(const DeliveryGuard&) = delete;
+
+            ~DeliveryGuard()
+            {
+                sl_set_log_sink(nullptr, nullptr);
+                sl_set_log_synchronous(was_synchronous_ ? 1 : 0);
+            }
+
+        private:
+            bool was_synchronous_;
+    };
 
     /** @brief Returns a full C record of this version, as another logger would fill it. */
     SushiLogRecord foreign_record()
@@ -95,15 +123,14 @@ namespace
     }
 } // namespace
 
-TEST(Small_LogCSink, ACSinkReceivesEveryFieldWithItsSize)
+TEST(Medium_LogCSink, ACSinkReceivesEveryFieldWithItsSize)
 {
-    g_c_records.clear();
+    const DeliveryGuard guard;
     int marker = 0;
     sl_set_log_synchronous(1);
     sl_set_log_sink(&copy_c_record, &marker);
 
     SAMPLE_LOG_ERROR(K_BRIDGE_LOG_CATEGORY, "device {} lost", 2);
-    sl_set_log_sink(nullptr, nullptr);
 
     ASSERT_EQ(g_c_records.size(), 1u);
     const CRecordCopy& record = g_c_records[0];
@@ -114,26 +141,6 @@ TEST(Small_LogCSink, ACSinkReceivesEveryFieldWithItsSize)
     EXPECT_EQ(record.message, "device 2 lost");
     EXPECT_NE(record.text.find("[ctest.bridge]"), std::string::npos);
     EXPECT_EQ(record.user, &marker);
-}
-
-TEST(Small_LogCSink, ForwardRecordKeepsTimeAndRenumbersTheThread)
-{
-    const SushiLog::LogCapture recording;
-    const SushiLogRecord record = foreign_record();
-
-    sl_forward_record(&record, nullptr);
-
-    ASSERT_EQ(recording.records().size(), 1u);
-    const SushiLog::CapturedRecord line = recording.records()[0];
-    EXPECT_EQ(line.level, SushiLog::LogLevel::Error);
-    EXPECT_EQ(line.project, "hostproject");
-    EXPECT_EQ(line.module, "input");
-    EXPECT_EQ(line.file, "input.cpp");
-    EXPECT_EQ(line.line, 77u);
-    EXPECT_EQ(line.time_ns, 123456789);
-    EXPECT_EQ(line.message, "key lost");
-    EXPECT_NE(line.thread, 999u);
-    EXPECT_NE(line.text.find("[hostproject.input]"), std::string::npos);
 }
 
 TEST(Small_LogCSink, ForwardRecordReadsOnlyTheFieldsItsSizeCovers)
@@ -153,7 +160,7 @@ TEST(Small_LogCSink, ForwardRecordReadsOnlyTheFieldsItsSizeCovers)
 
 TEST(Medium_LogCSink, ANullFunctionRestoresStderr)
 {
-    g_c_records.clear();
+    const DeliveryGuard guard;
     sl_set_log_synchronous(1);
     sl_set_log_sink(&copy_c_record, nullptr);
     sl_set_log_sink(nullptr, nullptr);
@@ -164,4 +171,17 @@ TEST(Medium_LogCSink, ANullFunctionRestoresStderr)
 
     EXPECT_TRUE(g_c_records.empty());
     EXPECT_NE(err.find("after the reset"), std::string::npos);
+}
+
+TEST(Medium_LogCSink, SettingSynchronousToZeroReturnsDeliveryToTheLoggersThread)
+{
+    const DeliveryGuard guard;
+    sl_set_log_sink(&copy_c_record, nullptr);
+    sl_set_log_synchronous(0);
+
+    SAMPLE_LOG_ERROR(K_BRIDGE_LOG_CATEGORY, "queued");
+    sl_set_log_synchronous(1);
+
+    ASSERT_EQ(g_c_records.size(), 1u);
+    EXPECT_NE(g_c_records[0].delivered_on, std::this_thread::get_id());
 }

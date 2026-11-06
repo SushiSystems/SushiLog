@@ -1,5 +1,5 @@
 /**************************************************************************/
-/* test_SushiLog.cpp                                                      */
+/* compile_export.cpp                                                     */
 /**************************************************************************/
 /*                          This file is part of:                         */
 /*                                SushiLog                                */
@@ -22,52 +22,14 @@
 /**************************************************************************/
 
 /**
- * @file test_SushiLog.cpp
- * @brief Tests that the umbrella header gives every public C++ name and leaves the C header out.
+ * @file compile_export.cpp
+ * @brief Checks at compile time that export.hpp defines SUSHILOG_API for a consumer of the library.
  * @author Mustafa Garip
- * @see tests/foundation/umbrella/README.md
+ * @see tests/foundation/log/README.md
  */
 
-#include <SushiLog/SushiLog.hpp>
+#include <SushiLog/log/export.hpp>
 
-#include <gtest/gtest.h>
-
-/**
- * @brief Holds a type of the C header's name; it compiles only while the umbrella leaves
- *        log_c_sink.h out.
- */
-struct SushiLogRecord
-{
-    int declared_here; /**< A field the C header's struct does not have. */
-};
-
-namespace
-{
-    constexpr SushiLog::LogProject K_UMBRELLA_PROJECT{"umbrellatest", "UMBRELLATEST_LOG_LEVEL"};
-    constexpr SushiLog::LogCategory K_USE_LOG_CATEGORY =
-        SushiLog::make_log_category(K_UMBRELLA_PROJECT, "use");
-} // namespace
-
-TEST(Small_SushiLog, UmbrellaNamesTheLevelsTheSinkAndTheFront)
-{
-    SushiLog::set_log_synchronous(true);
-    int delivered = 0;
-    SushiLog::set_log_sink(SushiLog::LogSink([&delivered](const SushiLog::LogRecord&)
-    {
-        ++delivered;
-    }));
-
-    SL_LOG_FRONT_AT(SushiLog::log_level_ceiling(true), SushiLog::LogLevel::Error,
-                    K_USE_LOG_CATEGORY, "reached {}", 1);
-    SushiLog::set_log_sink(SushiLog::LogSink());
-
-    EXPECT_EQ(delivered, 1);
-    EXPECT_EQ(SushiLog::abi_version(), SushiLog::K_ABI_VERSION);
-}
-
-TEST(Small_SushiLog, UmbrellaLeavesTheCInterfaceOut)
-{
-    const SushiLogRecord local{7};
-
-    EXPECT_EQ(local.declared_here, 7);
-}
+#ifndef SUSHILOG_API
+    #error "export.hpp defines no SUSHILOG_API"
+#endif

@@ -30,9 +30,6 @@
 
 #include <SushiLog/log/log_level.hpp>
 
-#include <cstdint>
-#include <type_traits>
-
 #include <gtest/gtest.h>
 
 TEST(Small_LogLevel, NumbersRunFromTraceToOff)
@@ -44,9 +41,4 @@ TEST(Small_LogLevel, NumbersRunFromTraceToOff)
     EXPECT_EQ(static_cast<int>(SushiLog::LogLevel::Error), 4);
     EXPECT_EQ(static_cast<int>(SushiLog::LogLevel::Fatal), 5);
     EXPECT_EQ(static_cast<int>(SushiLog::LogLevel::Off), 6);
-}
-
-TEST(Small_LogLevel, IsOneByte)
-{
-    EXPECT_TRUE((std::is_same_v<std::underlying_type_t<SushiLog::LogLevel>, std::uint8_t>));
 }

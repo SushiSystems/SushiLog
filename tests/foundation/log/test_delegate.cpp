@@ -23,7 +23,7 @@
 
 /**
  * @file test_delegate.cpp
- * @brief Tests Delegate: emptiness, calls, moves and the destruction of what it holds.
+ * @brief Tests Delegate: emptiness, calls, moves, the destruction of what it holds and the call of an empty one.
  * @author Mustafa Garip
  * @see tests/foundation/log/README.md
  */
@@ -138,3 +138,13 @@ TEST(Small_Delegate, MoveAssignmentDestroysTheOldCallable)
     EXPECT_EQ(destroyed, 1);
     EXPECT_TRUE(held);
 }
+
+#ifndef NDEBUG
+TEST(Medium_Delegate, CallingAnEmptyDelegateAssertsInADebugBuild)
+{
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
+    const SushiLog::Delegate<void()> empty{};
+
+    EXPECT_DEATH(empty(), "Delegate: called while empty");
+}
+#endif

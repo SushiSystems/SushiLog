@@ -53,17 +53,6 @@ namespace
     }
 } // namespace
 
-TEST(Small_LogFront, CeilingIsErrorWhenLoggingIsOff)
-{
-    static_assert(SushiLog::log_level_ceiling(false) == SushiLog::LogLevel::Error);
-#ifdef NDEBUG
-    static_assert(SushiLog::log_level_ceiling(true) == SushiLog::LogLevel::Debug);
-#else
-    static_assert(SushiLog::log_level_ceiling(true) == SushiLog::LogLevel::Trace);
-#endif
-    SUCCEED();
-}
-
 TEST(Small_LogFront, ACallPastTheCeilingEvaluatesNothing)
 {
     const SushiLog::LogCapture recording;

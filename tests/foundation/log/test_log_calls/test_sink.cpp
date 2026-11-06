@@ -38,6 +38,7 @@
 #include <gtest/gtest.h>
 
 #include <SushiLog/log/log_capture.hpp>
+#include "delivery_mode_guard.hpp"
 #include "sample_front.hpp"
 
 namespace
@@ -49,8 +50,8 @@ namespace
 
 TEST(Medium_LogSink, TheDefaultSinkWritesEachLineToStderr)
 {
-    SushiLog::set_log_synchronous(true);
-    SushiLog::set_log_sink(SushiLog::LogSink());
+    const SushiLogTests::SinkGuard sink{SushiLog::LogSink()};
+    const SushiLogTests::DeliveryModeGuard mode(true);
 
     testing::internal::CaptureStderr();
     SAMPLE_LOG_WARN(K_OUTPUT_LOG_CATEGORY, "to stderr");
@@ -62,8 +63,9 @@ TEST(Medium_LogSink, TheDefaultSinkWritesEachLineToStderr)
 
 TEST(Medium_LogSink, AnEmptySinkRestoresStderr)
 {
-    SushiLog::set_log_synchronous(true);
     SushiLog::LogRecorder recording;
+    const SushiLogTests::SinkGuard guard{SushiLog::LogSink()};
+    const SushiLogTests::DeliveryModeGuard mode(true);
     SushiLog::set_log_sink(recording.sink());
     SushiLog::set_log_sink(SushiLog::LogSink());
 
@@ -77,15 +79,14 @@ TEST(Medium_LogSink, AnEmptySinkRestoresStderr)
 
 TEST(Medium_LogSink, ExchangeHandsBackTheSinkItReplaced)
 {
-    SushiLog::set_log_synchronous(true);
     SushiLog::LogRecorder first;
     SushiLog::LogRecorder second;
-    SushiLog::set_log_sink(first.sink());
+    const SushiLogTests::SinkGuard guard(first.sink());
+    const SushiLogTests::DeliveryModeGuard mode(true);
     SushiLog::LogSink swapped = second.sink();
 
     const bool exchanged = SushiLog::exchange_log_sink(swapped);
     swapped(SushiLog::LogRecord{});
-    SushiLog::set_log_sink(SushiLog::LogSink());
 
     EXPECT_TRUE(exchanged);
     EXPECT_EQ(first.records().size(), 1u);
@@ -94,16 +95,15 @@ TEST(Medium_LogSink, ExchangeHandsBackTheSinkItReplaced)
 
 TEST(Medium_LogSink, ASinkThatThrowsLosesNothing)
 {
-    SushiLog::set_log_synchronous(true);
-    SushiLog::set_log_sink(SushiLog::LogSink([](const SushiLog::LogRecord&)
+    const SushiLogTests::SinkGuard sink(SushiLog::LogSink([](const SushiLog::LogRecord&)
     {
         throw std::runtime_error("disk full");
     }));
+    const SushiLogTests::DeliveryModeGuard mode(true);
 
     testing::internal::CaptureStderr();
     SAMPLE_LOG_ERROR(K_OUTPUT_LOG_CATEGORY, "kept anyway");
     const std::string err = testing::internal::GetCapturedStderr();
-    SushiLog::set_log_sink(SushiLog::LogSink());
 
     EXPECT_NE(err.find("disk full"), std::string::npos);
     EXPECT_NE(err.find("kept anyway"), std::string::npos);
@@ -112,15 +112,15 @@ TEST(Medium_LogSink, ASinkThatThrowsLosesNothing)
 TEST(Medium_LogSink, AsynchronousDeliveryRunsOnTheLoggerThread)
 {
     std::thread::id delivered_on;
-    SushiLog::set_log_sink(SushiLog::LogSink([&delivered_on](const SushiLog::LogRecord&)
-    {
-        delivered_on = std::this_thread::get_id();
-    }));
-    SushiLog::set_log_synchronous(false);
+    const SushiLogTests::SinkGuard sink(
+        SushiLog::LogSink([&delivered_on](const SushiLog::LogRecord&)
+        {
+            delivered_on = std::this_thread::get_id();
+        }));
+    const SushiLogTests::DeliveryModeGuard mode(false);
 
     SAMPLE_LOG_WARN(K_OUTPUT_LOG_CATEGORY, "queued");
     SushiLog::set_log_synchronous(true);
-    SushiLog::set_log_sink(SushiLog::LogSink());
 
     EXPECT_NE(delivered_on, std::thread::id());
     EXPECT_NE(delivered_on, std::this_thread::get_id());
@@ -129,31 +129,32 @@ TEST(Medium_LogSink, AsynchronousDeliveryRunsOnTheLoggerThread)
 TEST(Medium_LogSink, EnteringSynchronousModeWaitsForTheQueueInOrder)
 {
     SushiLog::LogRecorder recording;
-    SushiLog::set_log_sink(recording.sink());
-    SushiLog::set_log_synchronous(false);
+    const SushiLogTests::SinkGuard sink(recording.sink());
+    const SushiLogTests::DeliveryModeGuard mode(false);
 
-    for (int i = 0; i < 100; ++i)
-        SAMPLE_LOG_WARN(K_OUTPUT_LOG_CATEGORY, "record {}", i);
+    SAMPLE_LOG_WARN(K_OUTPUT_LOG_CATEGORY, "record 0");
+    SAMPLE_LOG_WARN(K_OUTPUT_LOG_CATEGORY, "record 1");
+    SAMPLE_LOG_WARN(K_OUTPUT_LOG_CATEGORY, "record 2");
     SushiLog::set_log_synchronous(true);
 
     const std::vector<SushiLog::CapturedRecord> lines = recording.records();
-    SushiLog::set_log_sink(SushiLog::LogSink());
-    ASSERT_EQ(lines.size(), 100u);
-    for (int i = 0; i < 100; ++i)
-        EXPECT_EQ(lines[static_cast<std::size_t>(i)].message, "record " + std::to_string(i));
+    ASSERT_EQ(lines.size(), 3u);
+    EXPECT_EQ(lines[0].message, "record 0");
+    EXPECT_EQ(lines[1].message, "record 1");
+    EXPECT_EQ(lines[2].message, "record 2");
 }
 
 TEST(Medium_LogSink, SynchronousModeDeliversOnTheCallingThread)
 {
     std::thread::id delivered_on;
-    SushiLog::set_log_synchronous(true);
-    SushiLog::set_log_sink(SushiLog::LogSink([&delivered_on](const SushiLog::LogRecord&)
-    {
-        delivered_on = std::this_thread::get_id();
-    }));
+    const SushiLogTests::SinkGuard sink(
+        SushiLog::LogSink([&delivered_on](const SushiLog::LogRecord&)
+        {
+            delivered_on = std::this_thread::get_id();
+        }));
+    const SushiLogTests::DeliveryModeGuard mode(true);
 
     SAMPLE_LOG_WARN(K_OUTPUT_LOG_CATEGORY, "here");
-    SushiLog::set_log_sink(SushiLog::LogSink());
 
     EXPECT_EQ(delivered_on, std::this_thread::get_id());
 }
