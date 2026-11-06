@@ -10,6 +10,7 @@ sushilog_add_module_tests(
         compile_export.cpp
         compile_log_front.cpp
         test_delegate.cpp
+        test_level_setting.cpp
         test_log_abi.cpp
         test_log_c_sink.cpp
         test_log_capture.cpp

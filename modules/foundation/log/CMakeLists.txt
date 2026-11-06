@@ -10,6 +10,7 @@ sushilog_add_module(
         forward_sink.cpp
         level_environment.cpp
         level_name.cpp
+        level_setting.cpp
         level_table.cpp
         library_path.cpp
         log_abi.cpp

@@ -30,39 +30,12 @@
 
 #pragma once
 
-#include <optional>
-#include <string>
-#include <string_view>
-#include <vector>
-
+#include <SushiLog/log/level_setting.hpp>
 #include <SushiLog/log/log_level.hpp>
 #include <SushiLog/log/log_project.hpp>
 
 namespace SushiLog::Detail
 {
-    /** @brief Holds the level a project's variable names for one of its modules. */
-    struct ModuleLevel
-    {
-        std::string module; /**< The module, in lower case. */
-        LogLevel level;     /**< Its level. */
-    };
-
-    /** @brief Holds what one project's level variable says. */
-    struct LevelSetting
-    {
-        LogLevel level;                   /**< The level of every module not named. */
-        std::vector<ModuleLevel> modules; /**< The module=level pairs, in order. */
-
-        /** @brief Returns the level @p module takes: its last pair, else the project's level. */
-        [[nodiscard]] LogLevel level_of(std::string_view module) const noexcept;
-    };
-
-    /**
-     * @brief Reads @p value: a level for every module, then any module=level pairs, any case.
-     * @return Nothing when an item is neither a level nor a module=level pair.
-     */
-    [[nodiscard]] std::optional<LevelSetting> parse_level_setting(std::string_view value);
-
     /**
      * @brief Reads @p project's level variable once and returns what it sets.
      *

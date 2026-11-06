@@ -30,12 +30,12 @@
 
 #include "level_environment.hpp"
 
-#include <cctype>
 #include <cstddef>
 #include <cstdlib>
+#include <optional>
+#include <string>
 #include <utility>
 
-#include "level_name.hpp"
 #include "stderr_line.hpp"
 
 namespace SushiLog::Detail
@@ -44,25 +44,6 @@ namespace SushiLog::Detail
     {
         /** @brief Holds the level of a category that nothing sets. */
         constexpr LogLevel K_DEFAULT_LOG_LEVEL = LogLevel::Warn;
-
-        /** @brief Returns @p text without its leading and trailing spaces. */
-        std::string_view trimmed(std::string_view text) noexcept
-        {
-            while (!text.empty() && std::isspace(static_cast<unsigned char>(text.front())))
-                text.remove_prefix(1);
-            while (!text.empty() && std::isspace(static_cast<unsigned char>(text.back())))
-                text.remove_suffix(1);
-            return text;
-        }
-
-        /** @brief Returns @p text in lower case. */
-        std::string to_lower(std::string_view text)
-        {
-            std::string out(text);
-            for (char& c : out)
-                c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-            return out;
-        }
 
         /**
          * @brief Returns the value of the environment variable @p name, or nothing when it is
@@ -88,48 +69,6 @@ namespace SushiLog::Detail
             return copy;
         }
     } // namespace
-
-    LogLevel LevelSetting::level_of(std::string_view module) const noexcept
-    {
-        LogLevel found = level;
-        for (const ModuleLevel& item : modules)
-        {
-            if (item.module == module)
-                found = item.level;
-        }
-        return found;
-    }
-
-    std::optional<LevelSetting> parse_level_setting(std::string_view value)
-    {
-        LevelSetting setting{K_DEFAULT_LOG_LEVEL, {}};
-        std::string_view rest = value;
-        while (true)
-        {
-            const std::size_t comma = rest.find(',');
-            const std::string_view item = trimmed(rest.substr(0, comma));
-            const std::size_t equals = item.find('=');
-            if (equals == std::string_view::npos)
-            {
-                const std::optional<LogLevel> level = level_named(item);
-                if (!level)
-                    return std::nullopt;
-                setting.level = *level;
-            }
-            else
-            {
-                const std::string_view module = trimmed(item.substr(0, equals));
-                const std::optional<LogLevel> level =
-                    level_named(trimmed(item.substr(equals + 1)));
-                if (module.empty() || !level)
-                    return std::nullopt;
-                setting.modules.push_back(ModuleLevel{to_lower(module), *level});
-            }
-            if (comma == std::string_view::npos)
-                return setting;
-            rest.remove_prefix(comma + 1);
-        }
-    }
 
     LevelSetting read_level_environment(LogProject project)
     {
