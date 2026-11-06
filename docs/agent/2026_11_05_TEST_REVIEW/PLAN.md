@@ -1,6 +1,6 @@
 # Test review: plan
 
-**Status:** Open — every job done but M6, which waits on the owner (RW-17)
+**Status:** Open — every job done; RW-24 open
 
 Applies the verdicts of `REPORT.md`, in hierarchy order: the shared helpers, adapters and seams the
 rewrites need come first, then the defects the review found, then each module's tests. A module job
@@ -18,9 +18,9 @@ writes each add. Nothing in a module job changes production code except a seam a
 | M1 | the tests of `cli` (6 files): 15 rewrite, 1 resize, 1 split, 2 delete | T1, T2, T3, T4 | done |
 | M2 | the tests of `cli/services` (1 file): 21 rewrite | T1, T2, T3, T4 | done |
 | M3 | the tests of `core` (2 files): 1 rewrite, 3 split | T1, T2, T3, T4 | done |
-| M4 | the tests of `foundation` (20 files): 40 rewrite, 2 resize, 12 delete | T1, T2, T3, T4 | done; seams RW-19 to RW-24 |
+| M4 | the tests of `foundation` (20 files): 40 rewrite, 2 resize, 12 delete | T1, T2, T3, T4 | done; seams RW-19 to RW-23 built, RW-24 open |
 | M5 | the tests of `package` (1 file): 2 rewrite | T1, T2, T3, T4 | done |
-| M6 | the tests of `tools` (2 files): 1 rewrite, 2 resize, 1 split, 5 delete | T1, T2, T3, T4 | partial: deletes done in T4; budget-settings records wait on RW-17 |
+| M6 | the tests of `tools` (2 files): 1 rewrite, 2 resize, 1 split, 5 delete | T1, T2, T3, T4 | done; budget-settings test deleted (RW-17) |
 
 ## Acceptance
 

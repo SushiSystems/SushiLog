@@ -13,8 +13,6 @@
 | RW-10 | P2 | open | Log the exception in flight from a catch block | one call inside `catch (...)` logs the exception's type and message under a category, level and context |  |  | 2026-10-26 |
 | RW-11 | P2 | open | Let a program read the dropped-record count and the count per level | a program reads how many records were dropped and how many were made at each level since start |  |  | 2026-10-26 |
 | RW-12 | P2 | open | Set levels, register categories and log from Python | the C interface and a Python binding over it set and read a level, register a category and emit a record |  |  | 2026-10-26 |
-| RW-21 | P2 | open | Rule on an injected clock for the record time | Ruled 2026-11-06: a clock port exchanged like the sink; the time test Small_ on a set clock, one medium default test |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
-| RW-22 | P2 | open | Rule on thread identities as values for the thread number | Ruled 2026-11-06: thread numbering is a generic brick tested Small_ on values; one medium two-thread test |  | `docs/agent/2026_11_05_TEST_REVIEW/REPORT.md` | 2026-11-06 |
 
 ## Known issues
 

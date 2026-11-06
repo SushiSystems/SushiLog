@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- 2026-11-06 — log: Took the record time from `LogClock`, the system clock by default, with `exchange_log_clock` and `ScopedLogClock` (RW-21, `01f2938`).
+- 2026-11-06 — log: Numbered threads through `ThreadNumbers`, generic over the identity (RW-22, `01f2938`).
 - 2026-11-06 — log: Made `parse_level_setting` and `LevelSetting` public in `level_setting.hpp` (RW-19) (`f326cac`).
 - 2026-11-06 — log: Made `K_LOG_QUEUE_CAPACITY` public in `log_calls.hpp` (RW-20) (`168e7a0`).
 - 2026-11-06 — log: Added `delegate_fits_v` and `Delegate::fits`, which constrain the Delegate constructor to callables that fit its storage (RW-23, `c960ede`).
