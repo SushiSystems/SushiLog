@@ -29,5 +29,4 @@ has the prerequisites for both.
 The manual starts at [`docs/README.md`](docs/README.md); how to use the logger is in
 [`docs/guides/LOGGING_GUIDE.md`](docs/guides/LOGGING_GUIDE.md).
 
-SushiLog is source-available under the PolyForm Noncommercial License 1.0.0; see
-[`LICENSE`](LICENSE) and [`COMMERCIAL.md`](COMMERCIAL.md).
+SushiLog is open source under the Apache License 2.0; see [`LICENSE`](LICENSE).

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- 2026-11-06 — licence: Relicensed SushiLog under the Apache License 2.0 and removed `COMMERCIAL.md`; every source file's licence block follows (`LICENSE`, `tools/settings.py`).
 - 2026-11-05 — log: Shipped `LogCapture` and `LogRecorder` for tests, with `exchange_log_sink` and `log_synchronous`, so a capture puts back the sink and mode it found (RW-8, `log_capture.hpp`).
 - 2026-11-05 — tools: Took the shared checkers of 2026-11-05 with a baseline of the findings they meet, which RW-15 clears.
 - 2026-10-31 — cli: Ran `sl test` through the shared test options and `run_tests` of sushicore, so it runs small and medium by default and prints the budget line (RW-14, `a866aa4`).

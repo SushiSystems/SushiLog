@@ -1,8 +1,7 @@
 # Contributing to SushiLog
 
-Contributions from outside Sushi Systems are not accepted yet. SushiLog is source-available
-under the PolyForm Noncommercial License 1.0.0; see [`LICENSE`](../LICENSE) and
-[`COMMERCIAL.md`](../COMMERCIAL.md).
+Contributions from outside Sushi Systems are not accepted yet. SushiLog is open source
+under the Apache License 2.0; see [`LICENSE`](../LICENSE).
 
 ## Building and testing
 
