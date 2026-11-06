@@ -31,6 +31,7 @@
 #include <SushiLog/text/text_format.hpp>
 
 #include <cstdint>
+#include <ostream>
 
 #include <gtest/gtest.h>
 
@@ -60,12 +61,28 @@ TEST(Small_TextFormat, ArgumentsPastTheLastPlaceholderAreCounted)
 namespace
 {
     enum class Phase : signed char { Load = 3 };
+
+    enum class Mode { Fast = 1 };
+
+    std::ostream& operator<<(std::ostream& stream, Mode)
+    {
+        return stream << "fast-mode";
+    }
 }
 
-TEST(Small_TextFormat, AnEightBitIntegerIsANumberAndAnEnumItsValue)
+TEST(Small_TextFormat, AnEightBitIntegerIsWrittenAsANumber)
 {
     EXPECT_EQ(format_text("{} {}", static_cast<std::int8_t>(-5), static_cast<std::uint8_t>(200)), "-5 200");
+}
+
+TEST(Small_TextFormat, AScopedEnumWithoutAnOutputOperatorIsWrittenAsItsValue)
+{
     EXPECT_EQ(format_text("{}", Phase::Load), "3");
+}
+
+TEST(Small_TextFormat, AScopedEnumWithAnOutputOperatorIsWrittenThroughIt)
+{
+    EXPECT_EQ(format_text("{}", Mode::Fast), "fast-mode");
 }
 
 TEST(Small_TextFormat, ANullCStringIsWrittenAsNull)

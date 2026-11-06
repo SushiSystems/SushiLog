@@ -51,21 +51,42 @@ TEST(Small_ValueText, ScientificWritesThePrecisionAsked)
     EXPECT_EQ(SushiLog::scientific(12345.678, 3), "1.235e+04");
 }
 
-TEST(Small_ValueText, HexIsLowerCaseAndZeroPadded)
+TEST(Small_ValueText, HexWritesLowerCaseDigitsZeroPaddedToTheWidth)
 {
-    EXPECT_EQ(SushiLog::hex(0x0803, 8), "00000803");
+    EXPECT_EQ(SushiLog::hex(0xABCDEF, 8), "00abcdef");
+}
+
+TEST(Small_ValueText, HexWiderThanTheWidthIsWrittenWhole)
+{
     EXPECT_EQ(SushiLog::hex(0x1234567890, 4), "1234567890");
 }
 
-TEST(Small_ValueText, RightAndLeftAlignAnyStreamableValue)
+TEST(Small_ValueText, RightAlignsAnyStreamableValue)
 {
     EXPECT_EQ(SushiLog::right(42, 5), "   42");
-    EXPECT_EQ(SushiLog::left("ab", 4), "ab  ");
+}
+
+TEST(Small_ValueText, RightWiderThanTheWidthIsWrittenWhole)
+{
     EXPECT_EQ(SushiLog::right("abcdef", 3), "abcdef");
 }
 
-TEST(Small_ValueText, HelpersComposeAndFeedAFormat)
+TEST(Small_ValueText, LeftAlignsAnyStreamableValue)
+{
+    EXPECT_EQ(SushiLog::left("ab", 4), "ab  ");
+}
+
+TEST(Small_ValueText, LeftWiderThanTheWidthIsWrittenWhole)
+{
+    EXPECT_EQ(SushiLog::left("abcdef", 3), "abcdef");
+}
+
+TEST(Small_ValueText, RightAlignsTheTextOfFixed)
 {
     EXPECT_EQ(SushiLog::right(SushiLog::fixed(3.14159, 2), 8), "    3.14");
+}
+
+TEST(Small_ValueText, FixedFeedsAFormatPlaceholder)
+{
     EXPECT_EQ(SushiLog::format_text("loss {}", SushiLog::fixed(0.5, 2)), "loss 0.50");
 }

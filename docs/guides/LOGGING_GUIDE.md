@@ -57,9 +57,13 @@ specs. A value that needs a precision, a width or hex goes through a helper of `
 first, and the same helpers build any other text, such as an error message, without the logger:
 
 ```cpp
-TEST(Small_ValueText, HelpersComposeAndFeedAFormat)
+TEST(Small_ValueText, RightAlignsTheTextOfFixed)
 {
     EXPECT_EQ(SushiLog::right(SushiLog::fixed(3.14159, 2), 8), "    3.14");
+}
+
+TEST(Small_ValueText, FixedFeedsAFormatPlaceholder)
+{
     EXPECT_EQ(SushiLog::format_text("loss {}", SushiLog::fixed(0.5, 2)), "loss 0.50");
 }
 ```
