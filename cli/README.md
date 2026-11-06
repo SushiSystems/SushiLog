@@ -47,5 +47,7 @@ Another path is `--build-dir`. `sl test` leaves the quarantined tests out. `sl t
 installs the tree, builds `tests/package/` against the install and runs its two tests. `sl check`
 runs the nine shared checkers and, with `--rule`, only those whose `--list-rules` names the rule.
 Each of `build`, `test` and `check` takes a `Workspace`: the root, the configuration, the console,
-the command runner and, when given, the environment cmake and ctest run under. `sl` passes the
-checkout it runs in; a test passes a scratch checkout and a runner that starts nothing.
+the command runner and, when given, the environment cmake and ctest run under. The commands of
+`cli.py` hand on Typer's context object as that workspace; `sl` leaves it unset, so the service
+works on the checkout it runs in, and a test passes a scratch checkout and a runner that starts
+nothing.

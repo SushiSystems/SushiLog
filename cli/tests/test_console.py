@@ -6,24 +6,27 @@
 
 from __future__ import annotations
 
-import importlib
+import subprocess
+import sys
 
 import pytest
+from typer.testing import CliRunner
 
-pytestmark = pytest.mark.small
+from sushilog import cli
+
+pytestmark = pytest.mark.medium
+
+# Run in a fresh interpreter, so the check sees an import and nothing a test did before it.
+K_IMPORT_ONLY = "import sys, sushilog.console; sys.exit('rich.console' in sys.modules)"
 
 
 def test_importing_the_console_builds_nothing():
-    console = importlib.reload(importlib.import_module("sushilog.console"))
+    imported = subprocess.run([sys.executable, "-c", K_IMPORT_ONLY], check=False)
 
-    assert not console._lazy.built
+    assert imported.returncode == 0
 
 
 def test_help_works_outside_a_checkout(tmp_path, monkeypatch):
-    from typer.testing import CliRunner
-
-    from sushilog import cli
-
     monkeypatch.chdir(tmp_path)
 
     result = CliRunner().invoke(cli.app, ["--help"])

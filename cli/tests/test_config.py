@@ -39,10 +39,27 @@ def test_without_any_compiler_cmake_chooses(monkeypatch):
 def test_a_found_compiler_and_ninja_choose_ninja(monkeypatch):
     monkeypatch.setattr(shutil, "which", lambda name: f"/usr/bin/{name}")
 
-    cfg = Config()
-    assert cfg.resolved_generator() == "Ninja"
-    assert not cfg.is_multi_config()
+    assert Config().resolved_generator() == "Ninja"
+
+
+def test_ninja_is_single_config():
+    assert not Config(generator="Ninja").is_multi_config()
+
+
+@pytest.mark.parametrize(("platform", "multi"), [("windows", True), ("linux", False)])
+def test_without_a_generator_multi_config_follows_the_platform(monkeypatch, platform, multi):
+    monkeypatch.setattr(shutil, "which", lambda name: None)
+
+    assert Config(platform=platform).is_multi_config() is multi
 
 
 def test_a_visual_studio_generator_is_multi_config():
     assert Config(generator="Visual Studio 17 2022").is_multi_config()
+
+
+@pytest.mark.parametrize(("stack_cxx", "expected"),
+                         [("/stack/clang++", "/stack/clang++"), ("", "/pinned/clang++")])
+def test_the_compiler_the_environment_names_outranks_the_pinned_one(stack_cxx, expected):
+    cfg = Config(cxx="/pinned/clang++", stack_cxx=stack_cxx)
+
+    assert cfg.resolved_compiler() == expected

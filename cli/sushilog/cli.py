@@ -5,7 +5,8 @@
 """Declares the commands of `sl`, the SushiLog developer CLI.
 
 A thin Typer layer: each command parses its arguments and delegates to
-``sushilog.services.project``. The root options, the `docs` group and the entry point come from
+``sushilog.services.project``, handing it the context object as its workspace; `sl` leaves the
+object unset, so the service works on the checkout it runs in. The root options, the `docs` group and the entry point come from
 sushicore.
 """
 
@@ -96,6 +97,7 @@ def _clean_option() -> Any:
            "sl build --build-dir build/pkg-x --lean  # What a consumer's package build runs",
 )
 def build(
+    ctx: typer.Context,
     type: BuildType = _type_option(),
     clean: bool = _clean_option(),
     define: Optional[list[str]] = typer.Option(
@@ -112,7 +114,7 @@ def build(
     """Configure when needed, then build the libraries and the tests."""
     raise typer.Exit(project_service.build(type, clean=clean, defines=define or (),
                                            sanitizer=sanitize, lean=lean, tree_path=build_dir,
-                                           jobs=jobs, report=report))
+                                           jobs=jobs, report=report, workspace=ctx.obj))
 
 
 @app.command(
@@ -125,6 +127,7 @@ def build(
            "sl test --package  # Also build tests/package/ against the install",
 )
 def test(
+    ctx: typer.Context,
     type: BuildType = _type_option(),
     label: Optional[list[TestLabel]] = label_option(),
     filter: Optional[str] = filter_option(),
@@ -140,7 +143,8 @@ def test(
     """Build when needed, then run the tests of the sizes and the filter, then print the budget line."""
     raise typer.Exit(project_service.test(type, label or (), clean=clean, filter=filter,
                                           sanitizer=sanitize, jobs=jobs, package=package,
-                                          repeat=repeat, every_size=all_sizes))
+                                          repeat=repeat, every_size=all_sizes,
+                                          workspace=ctx.obj))
 
 
 @app.command(
@@ -151,11 +155,12 @@ def test(
            "sl check --rule rule_console_output  # One rule",
 )
 def check(
+    ctx: typer.Context,
     report: bool = typer.Option(False, "--report", "-r", help="Report counts without failing."),
     rule: Optional[str] = typer.Option(None, "--rule", help="Run only this rule."),
 ) -> None:
     """Run the shared checkers under tools/."""
-    raise typer.Exit(project_service.check(report=report, rule=rule))
+    raise typer.Exit(project_service.check(report=report, rule=rule, workspace=ctx.obj))
 
 
 register_package_command(app, ModuleProvision(
