@@ -14,6 +14,7 @@ sushilog_add_module_tests(
         test_log_abi.cpp
         test_log_c_sink.cpp
         test_log_capture.cpp
+        test_log_clock.cpp
         test_log_calls/test_environment.cpp
         test_log_calls/test_exit.cpp
         test_log_calls/test_fatal.cpp
@@ -24,4 +25,5 @@ sushilog_add_module_tests(
         test_log_calls/test_reentry.cpp
         test_log_calls/test_sink.cpp
         test_log_front.cpp
-        test_log_level.cpp)
+        test_log_level.cpp
+        test_thread_numbers.cpp)

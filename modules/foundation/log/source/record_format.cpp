@@ -30,12 +30,13 @@
 
 #include "record_format.hpp"
 
-#include <atomic>
-#include <chrono>
 #include <cstddef>
 #include <cstdio>
 #include <ctime>
+#include <thread>
 #include <utility>
+
+#include <SushiLog/log/thread_numbers.hpp>
 
 #include "level_name.hpp"
 
@@ -93,17 +94,11 @@ namespace SushiLog::Detail
         return LogRecord{level, project, module, file, line, thread, time_ns, message, text};
     }
 
-    std::int64_t now_ns() noexcept
-    {
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(
-                   std::chrono::system_clock::now().time_since_epoch())
-            .count();
-    }
-
     std::uint32_t thread_number() noexcept
     {
-        static std::atomic<std::uint32_t> next{1};
-        thread_local const std::uint32_t number = next.fetch_add(1, std::memory_order_relaxed);
+        // Never destroyed, so a thread that first logs during static destruction still gets one.
+        static ThreadNumbers<std::thread::id>* const numbers = new ThreadNumbers<std::thread::id>();
+        thread_local const std::uint32_t number = numbers->number_of(std::this_thread::get_id());
         return number;
     }
 

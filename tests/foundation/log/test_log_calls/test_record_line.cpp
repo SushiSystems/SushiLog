@@ -30,8 +30,6 @@
 
 #include <SushiLog/log/log_calls.hpp>
 
-#include <chrono>
-#include <cstdint>
 #include <regex>
 #include <string>
 #include <thread>
@@ -46,14 +44,6 @@ namespace
     constexpr SushiLog::LogProject K_LINE_PROJECT{"linetest", "LINETEST_LOG_LEVEL"};
     constexpr SushiLog::LogCategory K_MEMORY_LOG_CATEGORY =
         SushiLog::make_log_category(K_LINE_PROJECT, "memory");
-
-    /** @brief Returns the system clock now in nanoseconds since the Unix epoch. */
-    std::int64_t now_ns()
-    {
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(
-                   std::chrono::system_clock::now().time_since_epoch())
-            .count();
-    }
 } // namespace
 
 TEST(Small_LogRecordLine, LineHoldsTimeLevelCategoryThreadCallSiteAndMessage)
@@ -73,19 +63,6 @@ TEST(Small_LogRecordLine, LineHoldsTimeLevelCategoryThreadCallSiteAndMessage)
     EXPECT_EQ(line.module, "memory");
 }
 
-TEST(Medium_LogRecordLine, TimeIsTheSystemClockOfTheCall)
-{
-    const SushiLog::LogCapture recording;
-    const std::int64_t before = now_ns();
-
-    SAMPLE_LOG_WARN(K_MEMORY_LOG_CATEGORY, "timed");
-
-    const std::int64_t after = now_ns();
-    ASSERT_EQ(recording.records().size(), 1u);
-    EXPECT_GE(recording.records()[0].time_ns, before);
-    EXPECT_LE(recording.records()[0].time_ns, after);
-}
-
 TEST(Small_LogRecordLine, ALineBreakInTheMessageBecomesASpaceInTheLine)
 {
     const SushiLog::LogCapture recording;
@@ -97,17 +74,6 @@ TEST(Small_LogRecordLine, ALineBreakInTheMessageBecomesASpaceInTheLine)
     EXPECT_EQ(text.find('\n'), std::string::npos);
     EXPECT_EQ(text.find('\r'), std::string::npos);
     EXPECT_NE(text.find("first second  third"), std::string::npos);
-}
-
-TEST(Small_LogRecordLine, OneThreadKeepsOneNumber)
-{
-    const SushiLog::LogCapture recording;
-
-    SAMPLE_LOG_WARN(K_MEMORY_LOG_CATEGORY, "one");
-    SAMPLE_LOG_WARN(K_MEMORY_LOG_CATEGORY, "two");
-
-    ASSERT_EQ(recording.records().size(), 2u);
-    EXPECT_EQ(recording.records()[0].thread, recording.records()[1].thread);
 }
 
 TEST(Medium_LogRecordLine, TwoThreadsGetTwoNumbers)

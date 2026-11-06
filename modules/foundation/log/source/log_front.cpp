@@ -35,6 +35,7 @@
 #include <utility>
 
 #include "logger.hpp"
+#include "log_clock_holder.hpp"
 #include "record_format.hpp"
 #include "stderr_line.hpp"
 
@@ -60,7 +61,7 @@ namespace SushiLog::Detail
                          std::string&& message)
     {
         logger().writer.write(make_record(level, category.project().name(), category.module(),
-                                          file, static_cast<std::uint32_t>(line), now_ns(),
+                                          file, static_cast<std::uint32_t>(line), record_time_ns(),
                                           std::move(message)));
     }
 } // namespace SushiLog::Detail

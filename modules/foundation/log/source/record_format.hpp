@@ -59,9 +59,6 @@ namespace SushiLog::Detail
         [[nodiscard]] LogRecord view() const noexcept;
     };
 
-    /** @brief Returns the system clock time now, in nanoseconds since the Unix epoch. */
-    [[nodiscard]] std::int64_t now_ns() noexcept;
-
     /**
      * @brief Returns this logger's number for the calling thread, given on its first call.
      */

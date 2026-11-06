@@ -32,13 +32,15 @@
 
 #include <utility>
 
+#include "log_clock_holder.hpp"
+
 namespace SushiLog::Detail
 {
     QueuedRecord make_own_record(LogLevel level, const char* file, std::uint32_t line,
                                  std::string&& message)
     {
         return make_record(level, K_LOG_LOG_CATEGORY.project().name(),
-                           K_LOG_LOG_CATEGORY.module(), file, line, now_ns(),
+                           K_LOG_LOG_CATEGORY.module(), file, line, record_time_ns(),
                            std::move(message));
     }
 } // namespace SushiLog::Detail

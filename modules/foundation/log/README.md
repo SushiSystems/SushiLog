@@ -13,8 +13,11 @@ C++ standard library only.
 | `SushiLog/log/log_category.hpp` | `LogCategory` and `make_log_category`: a project and a module |
 | `SushiLog/log/log_record.hpp` | `LogRecord`, the fields a sink receives |
 | `SushiLog/log/log_sink.hpp` | `LogSink`, the callable a sink is stored as |
-| `SushiLog/log/delegate.hpp` | `Delegate`, the move-only callable `LogSink` is built on |
-| `SushiLog/log/log_calls.hpp` | `set_log_level`, `log_level`, `set_log_sink`, `exchange_log_sink`, `set_log_synchronous`, `log_synchronous`, `log_forward_sink`, `log_at` |
+| `SushiLog/log/delegate.hpp` | `Delegate`, the move-only callable `LogSink` is built on, and `delegate_fits_v`, whether a callable fits its storage |
+| `SushiLog/log/level_setting.hpp` | `LevelSetting` and `parse_level_setting`, the reading of a level variable's value with no environment |
+| `SushiLog/log/log_clock.hpp` | `LogClock`, `system_clock_ns`, `exchange_log_clock` and `ScopedLogClock`: the clock a record takes its time from, the system clock by default |
+| `SushiLog/log/thread_numbers.hpp` | `ThreadNumbers`, which numbers identities in the order first seen; the record line numbers threads with it |
+| `SushiLog/log/log_calls.hpp` | `set_log_level`, `log_level`, `set_log_sink`, `exchange_log_sink`, `set_log_synchronous`, `log_synchronous`, `log_forward_sink`, `log_at`, `K_LOG_QUEUE_CAPACITY` |
 | `SushiLog/log/log_capture.hpp` | `LogRecorder`, the in-memory sink, and `LogCapture`, which sets it with synchronous delivery for one scope and puts back what it found |
 | `SushiLog/log/log_front.hpp` | `SL_LOG_FRONT_AT` and `log_level_ceiling`, on which a project defines its macros |
 | `SushiLog/log/log_abi.hpp` | `K_ABI_VERSION`, `abi_version` and the check a front runs on its first call |
@@ -28,9 +31,11 @@ Each file holds one responsibility; `logger.cpp` composes them and adds nothing.
 | Brick | Holds |
 | --- | --- |
 | `level_table` | `LevelTable`: the atomic level of each category, the level of each project, which projects this logger owns |
-| `level_environment` | `read_level_environment`: reads a project's variable once, when the table adds the project |
+| `level_environment` | `read_level_environment`: reads a project's variable once, when the table adds the project, and parses it with `parse_level_setting` |
+| `level_setting` | `parse_level_setting`, the grammar of a level variable's value |
+| `log_clock` | The clock a record takes its time from and its exchange |
 | `level_name` | The label of each level and the level a word names |
-| `record_format` | `QueuedRecord`, `make_record`, the thread numbers and the clock |
+| `record_format` | `QueuedRecord`, `make_record` and the number of the calling thread |
 | `own_record` | The records the logger writes about itself, under `sushilog.log` |
 | `log_queue` | `LogQueue`: the bounded queue, the drop count and the drop report |
 | `sink_holder` | `SinkHolder`: the sink, its swap, a sink that throws or re-enters |
