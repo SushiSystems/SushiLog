@@ -36,7 +36,7 @@ def test_the_build_command_hands_the_tree_and_lean_to_the_service(project):
                             obj=project.workspace)
 
     assert result.exit_code == 0
-    configure = project.runner.commands[0]
+    configure = project.commands[0]
     assert Path(_value_after(configure, "-B")) == project.root / "build" / "pkg-x"
     assert "-DSL_BUILD_TESTS=OFF" in configure
 
@@ -45,7 +45,7 @@ def test_a_lean_build_configures_the_named_tree_without_tests(project):
     assert project_service.build(BuildType.RELEASE, lean=True, tree_path="build/pkg-x",
                                  workspace=project.workspace) == 0
 
-    configure = project.runner.commands[0]
+    configure = project.commands[0]
     assert Path(_value_after(configure, "-B")) == project.root / "build" / "pkg-x"
     assert "-DSL_BUILD_TESTS=OFF" in configure
 
@@ -53,7 +53,7 @@ def test_a_lean_build_configures_the_named_tree_without_tests(project):
 def test_a_default_build_asks_for_the_tests(project):
     assert project_service.build(BuildType.RELEASE, workspace=project.workspace) == 0
 
-    assert "-DSL_BUILD_TESTS=ON" in project.runner.commands[0]
+    assert "-DSL_BUILD_TESTS=ON" in project.commands[0]
 
 
 def test_a_lean_build_reconfigures_a_tree_that_has_tests(project):
@@ -61,7 +61,7 @@ def test_a_lean_build_reconfigures_a_tree_that_has_tests(project):
 
     assert project_service.build(BuildType.RELEASE, lean=True, workspace=project.workspace) == 0
 
-    assert "-DSL_BUILD_TESTS=OFF" in project.runner.commands[0]
+    assert "-DSL_BUILD_TESTS=OFF" in project.commands[0]
 
 
 def test_the_package_command_is_registered_with_its_options():

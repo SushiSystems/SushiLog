@@ -79,7 +79,7 @@ class TestBuild:
     def test_build_configures_an_empty_tree_then_compiles(self, project):
         assert project_service.build(BuildType.RELEASE, workspace=project.workspace) == 0
 
-        configure, compile_ = project.runner.commands
+        configure, compile_ = project.commands
         assert _is_configure(configure) and _is_compile(compile_)
         assert Path(_value_after(configure, "-B")) == project.root / "build" / "default-release"
         assert "-DCMAKE_BUILD_TYPE=Release" in configure
@@ -91,21 +91,21 @@ class TestBuild:
 
         assert project_service.build(workspace=project.workspace) == 0
 
-        assert [_is_compile(command) for command in project.runner.commands] == [True]
+        assert [_is_compile(command) for command in project.commands] == [True]
 
     def test_build_with_a_define_reconfigures(self, project):
         project.configure_tree("Debug")
 
         assert project_service.build(defines=["FOO=1"], workspace=project.workspace) == 0
 
-        configure = project.runner.commands[0]
+        configure = project.commands[0]
         assert _is_configure(configure) and _value_after(configure, "-D") == "FOO=1"
 
     def test_build_with_a_sanitizer_uses_its_own_tree(self, project):
         assert project_service.build(BuildType.DEBUG, sanitizer=Sanitizer.THREAD,
                                      workspace=project.workspace) == 0
 
-        configure = project.runner.commands[0]
+        configure = project.commands[0]
         assert Path(_value_after(configure, "-B")).name == "tsan-debug"
         assert "-DSL_SANITIZE=thread" in configure
 
@@ -115,12 +115,12 @@ class TestBuild:
         assert project_service.build(clean=True, workspace=project.workspace) == 0
 
         assert not (tree / "build.ninja").exists()
-        assert _is_configure(project.runner.commands[0])
+        assert _is_configure(project.commands[0])
 
     def test_build_without_a_type_configures_debug_in_the_default_tree(self, project):
         assert project_service.build(workspace=project.workspace) == 0
 
-        configure = project.runner.commands[0]
+        configure = project.commands[0]
         assert "-DCMAKE_BUILD_TYPE=Debug" in configure
         assert Path(_value_after(configure, "-B")) == project.tree
 
@@ -133,7 +133,7 @@ class TestBuild:
         with pytest.raises(ConfigError, match="Release tree"):
             project_service.build(BuildType.DEBUG, workspace=project.workspace)
 
-        assert project.runner.commands == []
+        assert project.commands == []
 
     def test_build_refuses_a_define_naming_the_build_type(self, project):
         with pytest.raises(ConfigError, match="CMAKE_BUILD_TYPE"):
@@ -148,13 +148,13 @@ class TestBuild:
         with pytest.raises(build_admission.BuildStoppedError):
             project_service.build(workspace=project.workspace)
 
-        assert project.runner.commands == []
+        assert project.commands == []
 
     def test_build_configures_with_the_gate_as_compiler_and_linker_launcher(self, project):
         assert project_service.build(workspace=project.workspace) == 0
 
         launchers = {define.split("=", 1)[0]: define.split("=", 1)[1]
-                     for define in _defines_of(project.runner.commands[0])
+                     for define in _defines_of(project.commands[0])
                      if "_LAUNCHER=" in define}
         assert set(launchers) == {"CMAKE_CXX_COMPILER_LAUNCHER", "CMAKE_CXX_LINKER_LAUNCHER"}
         assert all("build_gate" in value for value in launchers.values())
@@ -165,21 +165,21 @@ class TestBuild:
 
         assert project_service.build(workspace=project.workspace) == 0
 
-        assert _value_after(project.runner.commands[0], "--parallel") == "7"
+        assert _value_after(project.commands[0], "--parallel") == "7"
 
     def test_build_compiles_on_the_jobs_the_user_gave(self, project):
         project.configure_tree("Debug")
 
         assert project_service.build(jobs=3, workspace=project.workspace) == 0
 
-        assert _value_after(project.runner.commands[0], "--parallel") == "3"
+        assert _value_after(project.commands[0], "--parallel") == "3"
 
     def test_build_with_report_prints_and_writes_it_after_the_compile(self, project):
         project.configure_tree("Debug")
 
         assert project_service.build(report=True, workspace=project.workspace) == 0
 
-        assert project.console.of("info")[-1].startswith("Report: ")
+        assert project.console.texts("info")[-1].startswith("Report: ")
         assert (project.tree / "build_report.json").is_file()
 
 
@@ -193,7 +193,7 @@ class TestTest:
         assert project_service.test(BuildType.DEBUG, (TestLabel.MEDIUM, TestLabel.SMALL),
                                     filter="Small_.*", jobs=4, workspace=project.workspace) == 0
 
-        ctest = project.runner.commands[-1]
+        ctest = project.commands[-1]
         assert _value_after(ctest, "-L") == "^(small|medium)$"
         assert _value_after(ctest, "-R") == "Small_.*"
         assert _value_after(ctest, "--parallel") == "4"
@@ -206,21 +206,21 @@ class TestTest:
 
         assert project_service.test(workspace=project.workspace) == 0
 
-        assert _value_after(project.runner.commands[-1], "-L") == "^(small|medium)$"
+        assert _value_after(project.commands[-1], "-L") == "^(small|medium)$"
 
     def test_test_refuses_an_unfiltered_large_run_after_the_build(self, project):
         project.configure_tree("Debug")
 
         assert project_service.test(sizes=(TestLabel.LARGE,), workspace=project.workspace) == 2
 
-        assert _is_compile(project.runner.commands[-1])
+        assert _is_compile(project.commands[-1])
 
     def test_test_with_package_installs_then_builds_and_runs_the_consumer(self, project):
         project.configure_tree("Debug")
 
         assert project_service.test(package=True, workspace=project.workspace) == 0
 
-        install, configure, compile_, ctest = project.runner.commands[-4:]
+        install, configure, compile_, ctest = project.commands[-4:]
         prefix = _value_after(install, "--prefix")
         assert "--install" in install and Path(prefix).name == "package-prefix"
         assert Path(_value_after(configure, "-S")) == project.root / "tests" / "package"
@@ -236,13 +236,13 @@ class TestCheck:
     def test_check_runs_every_checker_with_the_root(self, project):
         assert project_service.check(workspace=project.workspace) == 0
 
-        assert [Path(command[1]) for command in project.runner.commands] == [
+        assert [Path(command[1]) for command in project.commands] == [
             project.root / checker for checker in project_service.K_CHECKERS]
         assert all(command[0] == sys.executable and command[2] == str(project.root)
-                   for command in project.runner.commands)
+                   for command in project.commands)
 
     def test_check_returns_the_highest_checker_exit_code(self, project):
-        project.runner.script(0, 3, 1)
+        project.runner.script(0).script(3).script(1)
 
         assert project_service.check(workspace=project.workspace) == 3
 
@@ -251,13 +251,13 @@ class TestCheck:
 
         assert project_service.check(rule="rule_x", workspace=project.workspace) == 0
 
-        (command,) = project.runner.commands
+        (command,) = project.commands
         assert command[1].endswith("check_logging.py") and command[-2:] == ["--rule", "rule_x"]
 
     def test_check_with_an_unknown_rule_fails_and_says_so(self, project):
         assert project_service.check(rule="rule_none", workspace=project.workspace) == 1
 
-        assert project.console.of("error") == ["no checker under tools/ has the rule rule_none"]
+        assert project.console.texts("error") == ["no checker under tools/ has the rule rule_none"]
 
     def test_rules_of_reads_the_list_rules_flag(self, tmp_path):
         checker = tmp_path / "check_fake.py"

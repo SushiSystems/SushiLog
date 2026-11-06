@@ -49,5 +49,5 @@ runs the nine shared checkers and, with `--rule`, only those whose `--list-rules
 Each of `build`, `test` and `check` takes a `Workspace`: the root, the configuration, the console,
 the command runner and, when given, the environment cmake and ctest run under. The commands of
 `cli.py` hand on Typer's context object as that workspace; `sl` leaves it unset, so the service
-works on the checkout it runs in, and a test passes a scratch checkout and a runner that starts
-nothing.
+works on the checkout it runs in, and a test passes a scratch checkout with sushicore's
+`RecordingRunner` and `RecordingConsole`, which start and print nothing.

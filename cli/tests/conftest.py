@@ -11,10 +11,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
 import pytest
 from sushicore.build_tree import tree_dir
+from sushicore.console_memory import RecordingConsole
+from sushicore.proc_memory import RecordingRunner
+
+from sushilog.config import Config
+from sushilog.services.project import Workspace
 
 K_SIZE_TIMEOUTS = {"small": 1, "medium": 10, "large": 120}
 
@@ -34,48 +38,6 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
         item.add_marker(pytest.mark.timeout(K_SIZE_TIMEOUTS[_sizes_of(item)[0]]))
 
 
-class RecordingRunner:
-    """Records every command line it is handed and starts none of them."""
-
-    def __init__(self) -> None:
-        """Starts with no command recorded and no exit code scripted."""
-        self.commands: list[list[str]] = []
-        self._codes: list[int] = []
-
-    def script(self, *codes: int) -> None:
-        """Queues the exit codes of the next commands, in order; past them each exits 0."""
-        self._codes.extend(codes)
-
-    def resolve_exe(self, name: str, env: dict[str, str] | None = None) -> str:
-        """Returns the name unchanged."""
-        return name
-
-    def run(self, cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> int:
-        """Records the command and returns the next scripted exit code, or 0."""
-        self.commands.append([str(part) for part in cmd])
-        return self._codes.pop(0) if self._codes else 0
-
-    def run_drained(self, cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> int:
-        """Records the command and reports success."""
-        return self.run(cmd, cwd, env)
-
-
-class RecordingConsole:
-    """Records every line a service prints, keyed by the helper that printed it."""
-
-    def __init__(self) -> None:
-        """Starts with no line recorded."""
-        self.lines: list[tuple[str, str]] = []
-
-    def __getattr__(self, kind: str):
-        """Returns a printer that records its text under the helper's name."""
-        return lambda text="": self.lines.append((kind, str(text)))
-
-    def of(self, kind: str) -> list[str]:
-        """Returns the texts printed through one helper, in order."""
-        return [text for printed, text in self.lines if printed == kind]
-
-
 @dataclass
 class Project:
     """Holds a scratch checkout and what the project service did to it."""
@@ -83,8 +45,13 @@ class Project:
     root: Path
     runner: RecordingRunner
     console: RecordingConsole
-    workspace: Any
+    workspace: Workspace
     tree: Path = field(init=False)
+
+    @property
+    def commands(self) -> list[list[str]]:
+        """Returns the argv of every command the runner was handed, in order."""
+        return [list(command.argv) for command in self.runner.commands]
 
     def __post_init__(self) -> None:
         """Derives the plain Debug build tree from the root."""
@@ -110,11 +77,9 @@ class Project:
 @pytest.fixture
 def project(tmp_path) -> Project:
     """Returns a scratch checkout whose workspace records argv and starts nothing."""
-    from sushilog.config import Config
-    from sushilog.services.project import Workspace
-
     (tmp_path / "CMakeLists.txt").write_text("project(x)\n", encoding="utf-8")
-    runner, console = RecordingRunner(), RecordingConsole()
+    console = RecordingConsole()
+    runner = RecordingRunner(console)
     cfg = Config(cxx="clang++", generator="Ninja", ninja_exe="ninja")
     workspace = Workspace(tmp_path, cfg, console, runner, environment={})
     return Project(tmp_path, runner, console, workspace)

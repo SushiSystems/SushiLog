@@ -19,12 +19,12 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import Any
+from typing import Protocol
 
 from sushicore import build_admission, build_report, cmake_cache
 from sushicore.build_tree import K_DEFAULT_BUILD_TYPE, refuse_another_build_type, tree_dir
 from sushicore.cmake_driver import CMakeDriver
-from sushicore.proc import Runner
+from sushicore.proc import CommandRunner, ConsoleLike, Runner
 from sushicore.testing import ModuleTests, TestLabel, run_tests, select_labels
 from sushicore.toolchain_args import c_compiler_for
 
@@ -74,6 +74,16 @@ K_CHECKERS = (
 
 
 
+class ServiceConsole(ConsoleLike, Protocol):
+    """The console methods the project service prints through, beyond what the runner uses."""
+
+    def info(self, text: str) -> None:
+        """Prints an information line."""
+
+    def header(self, title: str) -> None:
+        """Prints a section header."""
+
+
 @dataclass(frozen=True)
 class Workspace:
     """Holds what the project service acts on and acts through.
@@ -89,8 +99,8 @@ class Workspace:
 
     root: Path
     config: Config
-    console: Any
-    runner: Any
+    console: ServiceConsole
+    runner: CommandRunner
     environment: Mapping[str, str] | None = None
 
     @cached_property

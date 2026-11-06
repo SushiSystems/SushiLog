@@ -41,7 +41,7 @@ class TestBuildCommand:
                          "-D", "A=1")
 
         assert result.exit_code == 0
-        configure = project.runner.commands[0]
+        configure = project.commands[0]
         assert Path(_value_after(configure, "-B")).name == "asan-release"
         assert "-DSL_SANITIZE=address" in configure
         assert _value_after(configure, "-D") == "A=1"
@@ -50,19 +50,19 @@ class TestBuildCommand:
         result = _invoke(project, "build")
 
         assert result.exit_code == 0
-        assert "-DCMAKE_BUILD_TYPE=Debug" in project.runner.commands[0]
+        assert "-DCMAKE_BUILD_TYPE=Debug" in project.commands[0]
 
     def test_build_hands_the_jobs_to_the_compile(self, project):
         result = _invoke(project, "build", "--jobs", "2")
 
         assert result.exit_code == 0
-        assert _value_after(project.runner.commands[-1], "--parallel") == "2"
+        assert _value_after(project.commands[-1], "--parallel") == "2"
 
     def test_build_with_report_prints_the_report(self, project):
         result = _invoke(project, "build", "--report")
 
         assert result.exit_code == 0
-        assert project.console.of("info")[-1].startswith("Report: ")
+        assert project.console.texts("info")[-1].startswith("Report: ")
 
     def test_build_with_clean_removes_the_tree(self, project):
         tree = project.configure_tree("Debug")
@@ -83,7 +83,7 @@ class TestTestCommand:
         result = _invoke(project, "test", "--label", "small", "--jobs", "3", "--filter", "X.*")
 
         assert result.exit_code == 0
-        ctest = project.runner.commands[-1]
+        ctest = project.commands[-1]
         assert _value_after(ctest, "-L") == "^(small)$"
         assert _value_after(ctest, "--parallel") == "3"
         assert _value_after(ctest, "-R") == "X.*"
@@ -94,14 +94,14 @@ class TestTestCommand:
         result = _invoke(project, "test", "--package")
 
         assert result.exit_code == 0
-        assert Path(_value_after(project.runner.commands[-1], "--test-dir")).name == "package"
+        assert Path(_value_after(project.commands[-1], "--test-dir")).name == "package"
 
     def test_test_refuses_zero_jobs_naming_the_option_and_runs_nothing(self, project):
         result = _invoke(project, "test", "--jobs", "0")
 
         assert result.exit_code == 2
         assert "--jobs" in _ANSI_ESCAPE.sub("", result.output)
-        assert project.runner.commands == []
+        assert project.commands == []
 
 
 @pytest.mark.medium
@@ -116,7 +116,7 @@ class TestCheckCommand:
         result = _invoke(project, "check", "--report", "--rule", "rule_a")
 
         assert result.exit_code == 0
-        (command,) = project.runner.commands
+        (command,) = project.commands
         assert command[-3:] == ["--report", "--rule", "rule_a"]
 
     def test_the_service_exit_code_becomes_the_process_exit_code(self, project):
