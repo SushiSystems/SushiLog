@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- 2026-11-06 — log: Made `K_LOG_QUEUE_CAPACITY` public in `log_calls.hpp` (RW-20) (`168e7a0`).
 - 2026-11-06 — log: Added `delegate_fits_v` and `Delegate::fits`, which constrain the Delegate constructor to callables that fit its storage (RW-23, `c960ede`).
 - 2026-11-06 — cli: Moved the CLI tests onto sushicore's `RecordingRunner` and `RecordingConsole`, typed the workspace on sushicore's protocols, and asked for sushicore 0.10.12 (RW-16, `a1ecd34`).
 - 2026-11-06 — tools: Deleted the leftover budget-settings test and `K_TEST_BUDGET`, which SushiSkills had dropped (RW-17, `94dab1f`).
