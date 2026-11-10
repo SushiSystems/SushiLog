@@ -2,10 +2,13 @@
 
 ## Unreleased
 
+## v0.4.0 — 2026-11-10
+
 - 2026-11-10 — log: Added the executor port `LogExecutor` with `set_log_executor` and `ScopedLogExecutor` (RW-25, `log_executor.hpp`).
 - 2026-11-10 — log: Added `ManualLogClock` and `ManualLogExecutor`, so a test drives time and delivery by hand (RW-25, `log_manual.hpp`).
 - 2026-11-10 — log: Delivered FATAL, synchronous mode and exit on the calling thread under any executor (RW-25, `log_writer.cpp`).
 - 2026-11-10 — cli: Required sushicore 0.12.2, which narrows a sharded test run by `--filter` and reruns a failed shard's cases.
+
 ## v0.3.1 — 2026-11-07
 
 - 2026-11-06 — tools: Took the shared checkers that accept a compile check and a `Characterization_` size, and cleared every known finding (RW-15, RW-18, `29d7a40`).

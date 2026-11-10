@@ -13,7 +13,6 @@
 | RW-10 | P2 | open | Log the exception in flight from a catch block | one call inside `catch (...)` logs the exception's type and message under a category, level and context |  |  | 2026-10-26 |
 | RW-11 | P2 | open | Let a program read the dropped-record count and the count per level | a program reads how many records were dropped and how many were made at each level since start |  |  | 2026-10-26 |
 | RW-12 | P2 | open | Set levels, register categories and log from Python | the C interface and a Python binding over it set and read a level, register a category and emit a record |  |  | 2026-10-26 |
-| RW-25 | P2 | open | Give the log writer an executor port and a manual clock | A consumer drives log delivery and time through ManualLogExecutor and ManualLogClock, and a fatal record drains on the calling thread |  |  | 2026-11-10 |
 
 ## Known issues
 
