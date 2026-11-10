@@ -32,6 +32,7 @@
 
 #include <cstdio>
 #include <deque>
+#include <memory>
 #include <exception>
 #include <string>
 #include <system_error>
@@ -57,15 +58,30 @@ namespace SushiLog::Detail
         }
 
         std::size_t dropped = 0;
+        bool queued = false;
+        std::shared_ptr<const LogExecutor> poster;
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            if (!synchronous_ && !stopping_ && is_worker_running())
+            if (!synchronous_ && !stopping_ && (executor_ || is_worker_running()))
             {
+                queued = true;
                 if (queue_.push(std::move(record)))
-                    work_ready_.notify_one();
-                return;
+                {
+                    if (executor_)
+                        poster = claim_post();
+                    else
+                        work_ready_.notify_one();
+                }
             }
-            dropped = queue_.take_dropped();
+            else
+            {
+                dropped = queue_.take_dropped();
+            }
+        }
+        if (queued)
+        {
+            post(poster);
+            return;
         }
         deliver_after_report(dropped, record);
     }
@@ -84,10 +100,38 @@ namespace SushiLog::Detail
         if (!synchronous)
             return;
 
+        if (executor_)
+        {
+            // No thread of ours empties the queue, so this one does.
+            idle_.wait(lock, [this]()
+            {
+                return stopping_ || !delivering_;
+            });
+            drain_locked(lock);
+            return;
+        }
+
         idle_.wait(lock, [this]()
         {
             return stopping_ || (queue_.is_empty() && !delivering_);
         });
+    }
+
+    void LogWriter::set_executor(LogExecutor executor)
+    {
+        std::shared_ptr<const LogExecutor> poster;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            executor_ = executor ? std::make_shared<const LogExecutor>(std::move(executor))
+                                 : nullptr;
+            scheduled_ = false;
+            if (executor_ && !queue_.is_empty())
+                poster = claim_post();
+            else if (!executor_ && !queue_.is_empty() && !synchronous_ && !stopping_)
+                static_cast<void>(is_worker_running());
+        }
+        work_ready_.notify_all();
+        post(poster);
     }
 
     bool LogWriter::is_synchronous()
@@ -146,7 +190,15 @@ namespace SushiLog::Detail
         {
             std::unique_lock<std::mutex> lock(mutex_);
             // From inside the sink the thread is this one, and waiting for it would never end.
-            if (!SinkHolder::is_delivering())
+            if (!SinkHolder::is_delivering() && executor_)
+            {
+                idle_.wait(lock, [this]()
+                {
+                    return !delivering_;
+                });
+                drain_locked(lock);
+            }
+            else if (!SinkHolder::is_delivering())
             {
                 idle_.wait(lock, [this]()
                 {
@@ -178,6 +230,60 @@ namespace SushiLog::Detail
         sink_.deliver(record);
     }
 
+    void LogWriter::drain()
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        scheduled_ = false;
+        if (delivering_)
+            return;
+        drain_locked(lock);
+    }
+
+    void LogWriter::drain_locked(std::unique_lock<std::mutex>& lock)
+    {
+        while (!queue_.is_empty())
+        {
+            QueuedRecord record = queue_.pop();
+            const std::size_t dropped = queue_.take_dropped();
+            delivering_ = true;
+            lock.unlock();
+
+            deliver_after_report(dropped, record);
+
+            lock.lock();
+            delivering_ = false;
+        }
+        idle_.notify_all();
+    }
+
+    std::shared_ptr<const LogExecutor> LogWriter::claim_post()
+    {
+        if (!executor_ || scheduled_)
+            return nullptr;
+        scheduled_ = true;
+        return executor_;
+    }
+
+    void LogWriter::post(const std::shared_ptr<const LogExecutor>& executor)
+    {
+        if (!executor)
+            return;
+        try
+        {
+            (*executor)(LogTask([this]()
+            {
+                drain();
+            }));
+        }
+        catch (const std::exception& error)
+        {
+            write_stderr_line(std::string("[SushiLog] the log executor failed (") +
+                              error.what() + "); the records are delivered on the calling "
+                              "thread.");
+            drain();
+        }
+    }
+
     bool LogWriter::is_worker_running()
     {
         if (worker_.joinable())
@@ -204,7 +310,7 @@ namespace SushiLog::Detail
         {
             work_ready_.wait(lock, [this]()
             {
-                return stopping_ || !queue_.is_empty();
+                return stopping_ || (!executor_ && !queue_.is_empty());
             });
 
             if (queue_.is_empty())

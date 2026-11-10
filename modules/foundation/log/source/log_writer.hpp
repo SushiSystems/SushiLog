@@ -32,8 +32,11 @@
 
 #include <condition_variable>
 #include <cstddef>
+#include <memory>
 #include <mutex>
 #include <thread>
+
+#include <SushiLog/log/log_executor.hpp>
 
 #include "log_queue.hpp"
 #include "record_format.hpp"
@@ -76,6 +79,12 @@ namespace SushiLog::Detail
             /** @brief Returns whether each record is delivered on the thread that wrote it. */
             [[nodiscard]] bool is_synchronous();
 
+            /**
+             * @brief Makes @p executor run the delivery in place of the thread; an empty one
+             *        restores the thread. Queued records are scheduled on the new executor.
+             */
+            void set_executor(LogExecutor executor);
+
             /** @brief Stops the thread and delivers what it left queued on this thread. */
             void shut_down();
 
@@ -85,6 +94,28 @@ namespace SushiLog::Detail
 
             /** @brief Delivers the drop report of @p dropped records, then @p record. */
             void deliver_after_report(std::size_t dropped, const QueuedRecord& record) noexcept;
+
+            /**
+             * @brief Delivers every queued record on this thread, oldest first, when no
+             *        delivery runs; it is the task the executor is given.
+             */
+            void drain();
+
+            /**
+             * @brief Delivers every queued record on this thread, oldest first.
+             * @pre mutex_ is held through @p lock and delivering_ is false.
+             */
+            void drain_locked(std::unique_lock<std::mutex>& lock);
+
+            /**
+             * @brief Returns the executor to post to when none is scheduled, and marks one
+             *        scheduled; null when there is no executor or one is already scheduled.
+             * @pre mutex_ is held.
+             */
+            [[nodiscard]] std::shared_ptr<const LogExecutor> claim_post();
+
+            /** @brief Gives drain() to @p executor, or runs it here if the executor throws. */
+            void post(const std::shared_ptr<const LogExecutor>& executor);
 
             /**
              * @brief Returns whether the thread exists, starting it on the first call.
@@ -99,12 +130,16 @@ namespace SushiLog::Detail
             LogQueue& queue_;
             /// @brief The sink every record goes through.
             SinkHolder& sink_;
-            /// @brief Guards queue_, worker_, synchronous_, stopping_ and delivering_.
+            /// @brief Guards queue_, worker_, executor_, scheduled_, synchronous_, stopping_ and delivering_.
             std::mutex mutex_;
             /// @brief Wakes the thread when a record arrives or shut_down() runs.
             std::condition_variable work_ready_;
             /// @brief Wakes a waiter when the queue is empty and delivered.
             std::condition_variable idle_;
+            /// @brief The executor that delivers in asynchronous mode; null for the thread.
+            std::shared_ptr<const LogExecutor> executor_;
+            /// @brief True from a post to the executor until its task starts.
+            bool scheduled_ = false;
             /// @brief The thread that delivers in asynchronous mode.
             std::thread worker_;
             /// @brief True while each log call delivers its own record.

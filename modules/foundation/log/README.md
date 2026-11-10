@@ -16,6 +16,8 @@ C++ standard library only.
 | `SushiLog/log/delegate.hpp` | `Delegate`, the move-only callable `LogSink` is built on, and `delegate_fits_v`, whether a callable fits its storage |
 | `SushiLog/log/level_setting.hpp` | `LevelSetting` and `parse_level_setting`, the reading of a level variable's value with no environment |
 | `SushiLog/log/log_clock.hpp` | `LogClock`, `system_clock_ns`, `exchange_log_clock` and `ScopedLogClock`: the clock a record takes its time from, the system clock by default |
+| `SushiLog/log/log_executor.hpp` | `LogExecutor`, `LogTask`, `set_log_executor` and `ScopedLogExecutor`: the port that runs delivery, the logger's own thread by default |
+| `SushiLog/log/log_manual.hpp` | `ManualLogClock` and `ManualLogExecutor`: the in-memory adapters of the clock and executor ports, which a test moves and runs by hand |
 | `SushiLog/log/thread_numbers.hpp` | `ThreadNumbers`, which numbers identities in the order first seen; the record line numbers threads with it |
 | `SushiLog/log/log_calls.hpp` | `set_log_level`, `log_level`, `set_log_sink`, `exchange_log_sink`, `set_log_synchronous`, `log_synchronous`, `log_forward_sink`, `log_at`, `K_LOG_QUEUE_CAPACITY` |
 | `SushiLog/log/log_capture.hpp` | `LogRecorder`, the in-memory sink, and `LogCapture`, which sets it with synchronous delivery for one scope and puts back what it found |
@@ -34,6 +36,7 @@ Each file holds one responsibility; `logger.cpp` composes them and adds nothing.
 | `level_environment` | `read_level_environment`: reads a project's variable once, when the table adds the project, and parses it with `parse_level_setting` |
 | `level_setting` | `parse_level_setting`, the grammar of a level variable's value |
 | `log_clock` | The clock a record takes its time from and its exchange |
+| `log_executor` | `set_log_executor`, which hands the executor to the writer |
 | `level_name` | The label of each level and the level a word names |
 | `record_format` | `QueuedRecord`, `make_record` and the number of the calling thread |
 | `own_record` | The records the logger writes about itself, under `sushilog.log` |

@@ -28,6 +28,8 @@ sushilog_add_module_tests(
         test_log_calls/test_record_line.cpp
         test_log_calls/test_reentry.cpp
         test_log_calls/test_sink.cpp
+        test_log_executor.cpp
         test_log_front.cpp
+        test_log_manual.cpp
         test_log_level.cpp
         test_thread_numbers.cpp)

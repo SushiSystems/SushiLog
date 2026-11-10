@@ -17,6 +17,7 @@ sushilog_add_module(
         log_c_sink.cpp
         log_calls.cpp
         log_clock.cpp
+        log_executor.cpp
         log_front.cpp
         log_queue.cpp
         log_writer.cpp
