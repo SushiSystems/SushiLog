@@ -171,6 +171,7 @@ TEST(Small_LogExecutor, TheScopedExecutorRestoresTheDefaultOnExit)
     SAMPLE_LOG_WARN(K_MANUAL_LOG_CATEGORY, "after");
     SushiLog::set_log_synchronous(true);
 
+    ASSERT_EQ(delivery.count(), 2u);
+    manual.run_pending();
     EXPECT_EQ(delivery.count(), 2u);
-    EXPECT_EQ(manual.run_pending(), 0u);
 }
