@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- 2026-11-11 — cli: Required sushicore 0.13, whose test command fails a run of a current tree that breaks a time limit, and told it whether the tree is current.
 ## v0.4.1 — 2026-11-10
 
 - 2026-11-10 — release: Carried the version numbers v0.4.0 lacked; the tag v0.4.0 holds the same code under version 0.3.1 (`CMakeLists.txt`).
