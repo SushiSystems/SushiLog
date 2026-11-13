@@ -20,5 +20,10 @@ A suite that pins today's behaviour before a refactor opens with `Characterizati
 size, `Characterization_Medium_LogExit`, and has a backlog entry that removes it; it takes the label
 and timeout of that size.
 
+The cases of a program run in shards per size, `sl_<module>_tests.<size>_shard_<i>of<N>`: 300 small, 25
+medium and 1 large case per shard, each shard writing its per-case GoogleTest XML to
+`test_results/gtest/` in the build tree, which the time reader reads. `sl test --filter` takes a GoogleTest
+filter and narrows each shard, so one case can still be selected.
+
 `sl test --label small` runs one size; `sl test --package` also builds `tests/package/`, an
 out-of-tree consumer of the installed package.

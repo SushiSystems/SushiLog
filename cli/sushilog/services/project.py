@@ -26,6 +26,7 @@ from sushicore.build_tree import K_DEFAULT_BUILD_TYPE, refuse_another_build_type
 from sushicore.cmake_driver import CMakeDriver
 from sushicore.proc import CommandRunner, ConsoleLike, Runner
 from sushicore.testing import ModuleTests, TestLabel, run_tests, select_labels
+from sushicore.testing.program_runner import ProgramRunner
 from sushicore.toolchain_args import c_compiler_for
 
 from .. import console
@@ -229,7 +230,7 @@ def test(build_type: BuildType = K_DEFAULT_TYPE, sizes: Sequence[TestLabel] = ()
 
     Args:
         sizes: The sizes to run; none runs small and medium.
-        filter: A ctest -R regex over the `Suite.Case` names.
+        filter: A GoogleTest filter over the `Suite.Case` names; it narrows each shard of the selected sizes.
         sanitizer: Builds and tests that sanitizer's tree.
         jobs: Tests run at once; none leaves the count to ctest.
         package: Also installs the tree, builds tests/package/ against the install and runs
@@ -251,6 +252,8 @@ def test(build_type: BuildType = K_DEFAULT_TYPE, sizes: Sequence[TestLabel] = ()
         profile=PROFILE, project_root=lambda: root, console=lambda: space.console,
         build_tree=lambda: tree, run=space.runner.run,
         run_ctest=lambda directory, **options: driver.ctest_run(cfg, directory, env, config=config, **options),
+        # A filtered run starts the shards' program itself, because CTest cannot narrow a shard's cases.
+        run_program=ProgramRunner(tree, space.runner.run, env),
         # The build above succeeded just now, so the tree is current whatever its generator.
         rebuilt=lambda directory: True)
     selection = select_labels(sizes, every_size=every_size)

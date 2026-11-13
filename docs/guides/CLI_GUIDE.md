@@ -35,13 +35,14 @@ that admits an edge only when its expected peak fits the free memory. Creating t
 ## sl test
 
 Builds when needed, then runs the tests. The quarantined ones are left out. Without a label it runs `small`
-and `medium`; `large` needs `--filter` or `--all`. CTest writes a JUnit file under the tree's `Testing` folder,
-and a repository that carries the shared budget reader prints one budget line after the run.
+and `medium`; `large` needs `--filter` or `--all`. The tests run in shards of up to 300 small, 25 medium or 1 large case, and each shard writes its
+per-case GoogleTest XML under the tree's `test_results/gtest`. CTest writes a JUnit file under the tree's
+`Testing` folder, and a repository that carries the shared budget reader prints one budget line after the run.
 
 ```bash
 sl test                                # small and medium
 sl test --label small --label medium   # what a pull request runs
-sl test --filter 'Small_LogLevels.*'   # ctest -R over Suite.Case
+sl test --filter 'Small_LogLevels.*'   # a GoogleTest filter over Suite.Case
 sl test --jobs 4                       # four tests at once
 sl test --all                          # every size; the large ones need real hardware
 sl test --sanitize thread --label medium
