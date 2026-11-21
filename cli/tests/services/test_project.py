@@ -109,14 +109,6 @@ class TestBuild:
         assert Path(_value_after(configure, "-B")).name == "tsan-debug"
         assert "-DSL_SANITIZE=thread" in configure
 
-    def test_build_with_clean_removes_the_tree_before_it_configures(self, project):
-        tree = project.configure_tree("Debug")
-
-        assert project_service.build(clean=True, workspace=project.workspace) == 0
-
-        assert not (tree / "build.ninja").exists()
-        assert _is_configure(project.commands[0])
-
     def test_build_without_a_type_configures_debug_in_the_default_tree(self, project):
         assert project_service.build(workspace=project.workspace) == 0
 

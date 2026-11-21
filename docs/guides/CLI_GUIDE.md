@@ -24,7 +24,6 @@ sl build --sanitize address   # ASan and UBSan, in build/asan-debug/
 sl build --sanitize thread    # ThreadSanitizer, in build/tsan-debug/
 sl build --jobs 4 --report    # four compile jobs; time and memory peaks after
 sl build -D SL_BUILD_TESTS=OFF
-sl build --clean
 ```
 
 Each build type and sanitizer has its own tree, and a tree keeps the type it was configured
@@ -68,6 +67,23 @@ sl run --sanitize thread sushilog_tests
 A pick prints the examples the build registered under `applications/examples/`, each with the
 `@brief` of its source; `--all` lists every program of the tree. With no name, the pick runs.
 `--type` and `--sanitize` choose the tree, as they do for `sl build`.
+
+## sl clean
+
+Says which build trees it would remove, with their sizes, and removes them only with `--yes`.
+Without it nothing is removed and the exit code is 2, so a script that expected the trees gone
+sees that they are not. `sl build` and `sl test` take no `--clean`: a build never removes the
+tree it configures.
+
+```bash
+sl clean                              # list every tree, remove none
+sl clean --yes                        # remove every tree
+sl clean --type debug --yes           # remove build/default-debug only
+sl clean --sanitize thread --yes      # remove the trees of one sanitizer
+```
+
+`--type` and `--sanitize` are repeatable. `--type` selects the plain tree of that type,
+`--sanitize` the trees of that sanitizer, and with neither every tree is selected.
 
 ## sl check
 

@@ -167,7 +167,7 @@ def _on_off(value: bool) -> str:
     return "ON" if value else "OFF"
 
 
-def build(build_type: BuildType = K_DEFAULT_TYPE, clean: bool = False,
+def build(build_type: BuildType = K_DEFAULT_TYPE,
           defines: Sequence[str] = (), sanitizer: Sanitizer | None = None,
           lean: bool = False, tree_path: str | None = None, jobs: int | None = None,
           report: bool = False, workspace: Workspace | None = None) -> int:
@@ -175,7 +175,6 @@ def build(build_type: BuildType = K_DEFAULT_TYPE, clean: bool = False,
 
     Args:
         build_type: Picks the tree; a tree keeps the type it was configured with.
-        clean: Removes the tree first.
         defines: `VAR=VALUE` cache variables; any of them reconfigures a configured tree.
         sanitizer: Builds in that sanitizer's own tree, build/asan-<type>/ or build/tsan-<type>/.
         lean: Builds no tests; what a library package is built as. SushiLog has no examples or
@@ -195,8 +194,6 @@ def build(build_type: BuildType = K_DEFAULT_TYPE, clean: bool = False,
     cmake_type = K_CMAKE_BUILD_TYPE[build_type]
     refuse_another_build_type(tree, cmake_type, defines)
     build_admission.refuse_a_stopped_gate(tree)
-    if clean:
-        driver.clean_tree(tree)
     env = space.build_env(tree)
 
     if defines or _needs_configure(driver, cfg, tree, sanitizer, lean):
@@ -224,7 +221,7 @@ def build(build_type: BuildType = K_DEFAULT_TYPE, clean: bool = False,
     return rc
 
 
-def test(build_type: BuildType = K_DEFAULT_TYPE, sizes: Sequence[TestLabel] = (), clean: bool = False,
+def test(build_type: BuildType = K_DEFAULT_TYPE, sizes: Sequence[TestLabel] = (),
          filter: str | None = None, sanitizer: Sanitizer | None = None,
          jobs: int | None = None, package: bool = False, repeat: int = 0,
          every_size: bool = False, workspace: Workspace | None = None) -> int:
@@ -242,7 +239,7 @@ def test(build_type: BuildType = K_DEFAULT_TYPE, sizes: Sequence[TestLabel] = ()
         workspace: The checkout to test; none tests the one `sl` runs in.
     """
     space = workspace or current_workspace()
-    rc = build(build_type, clean=clean, sanitizer=sanitizer, workspace=space)
+    rc = build(build_type, sanitizer=sanitizer, workspace=space)
     if rc != 0:
         return rc
 
@@ -285,6 +282,21 @@ def _test_package(space: Workspace, tree: Path, env: dict[str, str], config: str
     if rc != 0:
         return rc
     return driver.ctest_run(cfg, consumer, env, config=config)
+
+
+@dataclass(frozen=True)
+class CleanTarget:
+    """What the shared `clean` command acts on: the checkout, where it prints and the driver."""
+
+    root: Path
+    console: ServiceConsole
+    driver: CMakeDriver
+
+
+def clean_target(workspace: Workspace | None = None) -> CleanTarget:
+    """Returns the checkout *workspace* holds, or the one `sl` runs in, for the clean command."""
+    space = workspace or current_workspace()
+    return CleanTarget(space.root, space.console, space.driver)
 
 
 _INDEX = ExecutableIndex(skip_dirs=PROFILE.sibling_skip_dirs())
