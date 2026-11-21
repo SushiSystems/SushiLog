@@ -127,6 +127,19 @@ class TestBuild:
 
         assert project.commands == []
 
+    def test_build_refuses_a_tree_of_another_generator_and_keeps_it(self, project):
+        tree = project.configure_tree("Debug")
+        cache = tree / "CMakeCache.txt"
+        cache.write_text(cache.read_text(encoding="utf-8").replace("=Ninja", "=Another Generator"),
+                         encoding="utf-8")
+        (tree / "object.o").write_text("", encoding="utf-8")
+
+        with pytest.raises(ConfigError, match="`sl clean`"):
+            project_service.build(BuildType.DEBUG, workspace=project.workspace)
+
+        assert project.commands == []
+        assert (tree / "object.o").is_file()
+
     def test_build_refuses_a_define_naming_the_build_type(self, project):
         with pytest.raises(ConfigError, match="CMAKE_BUILD_TYPE"):
             project_service.build(defines=["CMAKE_BUILD_TYPE=Release"],

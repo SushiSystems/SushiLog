@@ -72,8 +72,9 @@ A pick prints the examples the build registered under `applications/examples/`, 
 
 Says which build trees it would remove, with their sizes, and removes them only with `--yes`.
 Without it nothing is removed and the exit code is 2, so a script that expected the trees gone
-sees that they are not. `sl build` and `sl test` take no `--clean`: a build never removes the
-tree it configures.
+sees that they are not. `sl build` and `sl test` take no `--clean`: a build never removes a tree. One
+configured with another generator, or for another source folder, is refused with a message that
+names `sl clean`, because CMake cannot change either in place.
 
 ```bash
 sl clean                              # list every tree, remove none

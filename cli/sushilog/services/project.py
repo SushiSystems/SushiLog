@@ -30,6 +30,7 @@ from sushicore.run_program import run_program
 from sushicore.testing import ModuleTests, TestLabel, run_tests, select_labels
 from sushicore.testing.program_runner import ProgramRunner
 from sushicore.toolchain_args import c_compiler_for
+from sushicore.tree_reuse import refuse_unreusable_tree
 
 from .. import console
 from ..config import PROFILE, Config, find_project_root, load_config
@@ -185,7 +186,8 @@ def build(build_type: BuildType = K_DEFAULT_TYPE,
         workspace: The checkout to build; none builds the one `sl` runs in.
 
     Raises:
-        ConfigError: The tree was configured as another build type, or *defines* names one.
+        ConfigError: The tree was configured as another build type, with another generator or for
+            another source folder, or *defines* names a build type.
         BuildStoppedError: The memory gate's stop file exists.
     """
     space = workspace or current_workspace()
@@ -194,6 +196,8 @@ def build(build_type: BuildType = K_DEFAULT_TYPE,
     cmake_type = K_CMAKE_BUILD_TYPE[build_type]
     refuse_another_build_type(tree, cmake_type, defines)
     build_admission.refuse_a_stopped_gate(tree)
+    refuse_unreusable_tree(driver, tree, generator=cfg.resolved_generator(), root=root,
+                           program="sl")
     env = space.build_env(tree)
 
     if defines or _needs_configure(driver, cfg, tree, sanitizer, lean):
