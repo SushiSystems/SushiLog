@@ -2,16 +2,11 @@
 
 ## Unreleased
 
+## v0.5.0 — 2026-11-21
+
 - 2026-11-21 — cli: Breaking change: `sl build` refuses a tree of another generator or source folder and names `sl clean`; a build never removes a tree (RW-28, `09a47bd`).
 - 2026-11-21 — cli: Breaking change: Removed `--clean` from build and test, and added `sl clean`, the shared command, which removes trees only with `--yes` (RW-27, `61e4789`).
 - 2026-11-21 — cli: Added `sl run`, which runs a built program by name or picks one of the built examples, each with its description; `--all` lists every program (RW-26, `0af906b`).
 - 2026-11-16 — tools: Took the shared tools from SushiCore v0.14.1, which leaves out its two own checkers and writes this repository's licence header, through `hub bump` (`tools/shared_tools.lock`).
 - 2026-11-16 — tools: Took the shared tools from SushiCore v0.14.0 into a lock file and moved the SushiCore pin to 0.14 (`tools/shared_tools.lock`).
 - 2026-11-11 — cli: Required sushicore 0.13, whose test command fails a run of a current tree that breaks a time limit, and told it whether the tree is current.
-## v0.4.1 — 2026-11-10
-
-- 2026-11-10 — release: Carried the version numbers v0.4.0 lacked; the tag v0.4.0 holds the same code under version 0.3.1 (`CMakeLists.txt`).
-- 2026-11-10 — log: Added the executor port `LogExecutor` with `set_log_executor` and `ScopedLogExecutor` (RW-25, `log_executor.hpp`).
-- 2026-11-10 — log: Added `ManualLogClock` and `ManualLogExecutor`, so a test drives time and delivery by hand (RW-25, `log_manual.hpp`).
-- 2026-11-10 — log: Delivered FATAL, synchronous mode and exit on the calling thread under any executor (RW-25, `log_writer.cpp`).
-- 2026-11-10 — cli: Required sushicore 0.12.2, which narrows a sharded test run by `--filter` and reruns a failed shard's cases.
