@@ -52,6 +52,23 @@ sl test --package                      # also the consumer of the installed pack
 `--package` installs the tree under `build/<tree>/package-prefix/`, builds `tests/package/` against it
 and runs its two programs, one per library target.
 
+## sl run
+
+Runs a program the tree already holds. It does not build first; without the tree it names
+`sl build` and exits 1.
+
+```bash
+sl run                                 # pick one of the built examples
+sl run --pick --all                    # pick from every program, tests and benchmarks included
+sl run sushilog_tests                  # a program by name: an exact match, then a substring
+sl run sushilog_tests -- --gtest_filter='Small_LogLevels.*'   # what follows `--` reaches it
+sl run --sanitize thread sushilog_tests
+```
+
+A pick prints the examples the build registered under `applications/examples/`, each with the
+`@brief` of its source; `--all` lists every program of the tree. With no name, the pick runs.
+`--type` and `--sanitize` choose the tree, as they do for `sl build`.
+
 ## sl check
 
 Runs the nine shared checkers under `tools/`.

@@ -10,10 +10,13 @@ what a command passed on shows in the argv the workspace's runner recorded.
 
 from __future__ import annotations
 
+import dataclasses
+import os
 import re
 from pathlib import Path
 
 import pytest
+from sushicore.console_memory import RecordingConsole
 from typer.testing import CliRunner
 
 from sushilog import cli
@@ -101,6 +104,69 @@ class TestTestCommand:
 
         assert result.exit_code == 2
         assert "--jobs" in _ANSI_ESCAPE.sub("", result.output)
+        assert project.commands == []
+
+
+def _plant(directory: Path, name: str) -> Path:
+    """Writes an empty file that the discovery of built programs takes for the program *name*."""
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / (f"{name}.exe" if os.name == "nt" else name)
+    path.write_bytes(b"")
+    path.chmod(0o755)
+    return path
+
+
+@pytest.fixture
+def built(project):
+    """The project whose tree holds one registered example beside a test program."""
+    examples = project.root / "applications" / "examples"
+    examples.mkdir(parents=True)
+    (examples / "CMakeLists.txt").write_text("add_executable(demo demo.cpp)\n", encoding="utf-8")
+    _plant(project.tree, "sushilog_tests")
+    _plant(project.tree, "demo")
+    return project
+
+
+def _answering(project, answer: str):
+    """Returns the project with a console that answers the prompt with *answer*."""
+    console = RecordingConsole(answer=answer)
+    workspace = dataclasses.replace(project.workspace, console=console)
+    return dataclasses.replace(project, console=console, workspace=workspace)
+
+
+@pytest.mark.medium
+class TestRunCommand:
+    """What `sl run` starts, and what it asks for first."""
+
+    def test_run_starts_the_program_the_name_matches_with_the_arguments_after_the_dashes(
+            self, built):
+        result = _invoke(built, "run", "sushilog_t", "--", "--gtest_filter=A.*")
+
+        assert result.exit_code == 0
+        (command,) = built.commands
+        assert (Path(command[0]).stem, command[1:]) == ("sushilog_tests", ["--gtest_filter=A.*"])
+
+    def test_run_with_no_target_picks_among_the_registered_examples(self, built):
+        picking = _answering(built, "2")
+
+        result = _invoke(picking, "run")
+
+        assert result.exit_code == 1
+        assert picking.console.texts("error") == ["'2' is not a number from 1 to 1."]
+
+    def test_run_pick_with_all_reaches_a_program_that_is_not_an_example(self, built):
+        picking = _answering(built, "2")
+
+        result = _invoke(picking, "run", "--pick", "--all")
+
+        assert result.exit_code == 0
+        assert Path(picking.commands[0][0]).stem == "sushilog_tests"
+
+    def test_run_without_a_build_tree_names_sl_build(self, project):
+        result = _invoke(project, "run", "sushilog_tests")
+
+        assert result.exit_code == 1
+        assert "Run `sl build` first." in project.console.texts("error")[0]
         assert project.commands == []
 
 
