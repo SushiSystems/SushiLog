@@ -25,4 +25,4 @@ Every build and test goes through `sl`; [`CLI_GUIDE.md`](guides/CLI_GUIDE.md) li
   its size in its suite: `Small_`, `Medium_` or `Large_`.
 - The module README, the pages under `docs/` that describe the change and a changelog line land
   in the same commit.
-- `python tools/check_all.py .` is clean before the change is reported finished.
+- `python -m sushicore.tools check .` is clean before the change is reported finished.

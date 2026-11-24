@@ -11,5 +11,5 @@ CTest directly.
 Check before reporting work as finished:
 
 ```
-python tools/check_all.py .
+python -m sushicore.tools check .
 ```
